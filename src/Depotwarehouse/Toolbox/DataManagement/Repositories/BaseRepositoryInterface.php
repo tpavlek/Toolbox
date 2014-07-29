@@ -18,6 +18,8 @@ interface BaseRepositoryInterface {
      */
     public function all();
 
+    public function filter($filters = array());
+
     /**
      * Finds specific instances a model by ID(s)
      * @param $id string|int Either an integer ID or a comma separated string of IDs.
@@ -53,6 +55,8 @@ interface BaseRepositoryInterface {
     public function destroy($id);
 
     public function getUpdateableFields();
+
+    public function getSearchableFields();
 
     /**
      * @return \Illuminate\Pagination\Paginator

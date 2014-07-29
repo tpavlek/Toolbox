@@ -15,4 +15,11 @@ class Verification {
         }
     }
 
+    static function array_filter_null(array $array) {
+        return array_filter($array, "self::is_not_null");
+    }
+
+    private static function is_not_null($var) {
+        return !is_null($var);
+    }
 } 

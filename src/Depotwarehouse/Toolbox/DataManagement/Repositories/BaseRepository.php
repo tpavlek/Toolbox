@@ -2,6 +2,7 @@
 
 namespace Depotwarehouse\Toolbox\DataManagement\Repositories;
 
+use Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel;
 use Depotwarehouse\Toolbox\DataManagement\Validators\BaseValidatorInterface;
 use Depotwarehouse\Toolbox\Exceptions\ValidationException;
 
@@ -25,7 +26,7 @@ class BaseRepository implements BaseRepositoryInterface {
     protected $validator;
 
 
-    public function __construct(Eloquent $model, BaseValidatorInterface $validator) {
+    public function __construct(BaseModel $model, BaseValidatorInterface $validator) {
         $this->model = $model;
         $this->validator = $validator;
     }
@@ -38,6 +39,20 @@ class BaseRepository implements BaseRepositoryInterface {
     public function all()
     {
         return $this->model->all();
+    }
+
+    /**
+     * @param array $filters
+     * @return \Illuminate\Database\Eloquent\Collection|static[]
+     */
+    public function filter($filters = array())
+    {
+        $items = $this->model->newQuery();
+        foreach ($filters as $key => $value) {
+            $items->where($key, $value);
+        }
+
+        return $items->paginate(Config::get('pagination.per_page'));
     }
 
     /**
@@ -128,8 +143,18 @@ class BaseRepository implements BaseRepositoryInterface {
         return $this->model->paginate(Config::get('pagination.per_page'));
     }
 
+    /**
+     * @return array list of updateable fields on the model
+     */
     public function getUpdateableFields()
     {
-        // TODO: Implement getUpdateableFields() method.
+        return $this->model->updateable;
     }
+
+    public function getSearchableFields()
+    {
+        return $this->model->searchable;
+    }
+
+
 }
