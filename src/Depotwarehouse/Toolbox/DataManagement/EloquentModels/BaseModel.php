@@ -19,15 +19,16 @@ class BaseModel extends \Eloquent {
     public $updateable = array();
     public $searchable = array();
 
-    public function __construct() {
-        parent::__construct();
+    public function __construct(array $attributes = array()) {
+        parent::__construct($attributes);
         $this->fillable = array();
         $this->guarded = array();
-
-        foreach ($this->meta as $property => $flags) {
-            /** @var $property string */
-            foreach ($flags as $flag) {
-                $this->{$flag}[]= $property;
+        if (!is_null($this->meta)) {
+            foreach ($this->meta as $property => $flags) {
+                /** @var $property string */
+                foreach ($flags as $flag) {
+                    $this->{$flag}[]= $property;
+                }
             }
         }
     }
