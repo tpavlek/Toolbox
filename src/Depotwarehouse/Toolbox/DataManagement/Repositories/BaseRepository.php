@@ -49,7 +49,15 @@ class BaseRepository implements BaseRepositoryInterface {
     {
         $items = $this->model->newQuery();
         foreach ($filters as $key => $value) {
-            $items->where($key, $value);
+            if (strpos($key, ':') === FALSE) {
+                $items->where($key, $value);
+                continue;
+            }
+            //TODO abstract this for multiple levels.
+            $includePath = explode(':', $key);
+            $items->whereHas($includePath[0], function($q) use ($includePath, $value) {
+                $q->where($includePath[1], $value);
+            });
         }
 
         return $items->paginate(Config::get('pagination.per_page'));
