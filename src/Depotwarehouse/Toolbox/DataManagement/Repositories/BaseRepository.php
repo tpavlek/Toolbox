@@ -4,8 +4,11 @@ namespace Depotwarehouse\Toolbox\DataManagement\Repositories;
 
 use Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel;
 use Depotwarehouse\Toolbox\DataManagement\Validators\BaseValidatorInterface;
+use Depotwarehouse\Toolbox\Exceptions\ParameterRequiredException;
 use Depotwarehouse\Toolbox\Exceptions\ValidationException;
 
+use Depotwarehouse\Toolbox\Verification;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 use Eloquent;
@@ -50,17 +53,35 @@ class BaseRepository implements BaseRepositoryInterface {
         $items = $this->model->newQuery();
         foreach ($filters as $key => $value) {
             if (strpos($key, ':') === FALSE) {
-                $items->where($key, $value);
+                try {
+                    $pair = Verification::getOpValuePair($value);
+                    $items->where($key, $pair['op'], $pair['value']);
+                } catch (ParameterRequiredException $exception) {
+                    $items->where($key, $value);
+                }
                 continue;
+
             }
             //TODO abstract this for multiple levels.
             $includePath = explode(':', $key);
-            $items->whereHas($includePath[0], function($q) use ($includePath, $value) {
-                $q->where($includePath[1], $value);
-            });
+            if (count($includePath) > 1) {
+                $items->whereHas(array_shift($includePath), $this->buildIncludeFilter($includePath, $items, $value));
+            }
         }
 
         return $items->paginate(Config::get('pagination.per_page'));
+    }
+
+    private function buildIncludeFilter(array &$includePath, Builder &$items, $value) {
+        $current_include = array_shift($includePath);
+        if (count($includePath) == 0) {
+            return function ($query) use ($current_include, $value) {
+                $query->where($current_include, $value);
+            };
+        }
+        return function($query) use ($current_include, $includePath, $items, $value) {
+          $query->whereHas($current_include, $this->buildIncludeFilter($includePath, $items, $value));
+        };
     }
 
     /**
