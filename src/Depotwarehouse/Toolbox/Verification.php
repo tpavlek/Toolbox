@@ -8,6 +8,12 @@ use Depotwarehouse\Toolbox\Exceptions\ParameterRequiredException;
 
 class Verification {
 
+    /**
+     * Requires that a set of attributes are present and set on an array
+     * @param array $array Array of items
+     * @param array $attributes The attributes which must be set on the array
+     * @throws Exceptions\ParameterRequiredException
+     */
     static function require_set(array $array, array $attributes) {
         foreach ($attributes as $attribute) {
             if (!array_key_exists($attribute, $array) || $array[$attribute] === null) {

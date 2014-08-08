@@ -54,6 +54,8 @@ interface BaseRepositoryInterface {
      */
     public function destroy($id);
 
+    public function getFillableFields();
+
     public function getUpdateableFields();
 
     public function getSearchableFields();

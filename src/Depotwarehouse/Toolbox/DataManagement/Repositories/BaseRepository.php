@@ -126,8 +126,14 @@ class BaseRepository implements BaseRepositoryInterface {
 
 
         // todo catch excheptions here?
-        return $this->model->create($attributes);
+        $attributes = array_only($attributes, $this->getFillableFields());
+        $model = $this->model->newInstance();
+        $model->fill($attributes);
+        $model->save();
+        return $model;
     }
+
+
 
     /**
      * Updates a model with the given IDs using the array of attributes passed in.
@@ -147,11 +153,14 @@ class BaseRepository implements BaseRepositoryInterface {
             return self::OBJECT_CREATED;
         }
 
+        $attributes = array_only($attributes, $this->getUpdateableFields());
+
         try {
             $this->validator->updateValidate($attributes);
         } catch (ValidationException $ex) {
             throw $ex;
         }
+
 
         // todo catch exceptions here?
         $this->model->update($attributes);
@@ -170,6 +179,11 @@ class BaseRepository implements BaseRepositoryInterface {
     public function paginate()
     {
         return $this->model->paginate(Config::get('pagination.per_page'));
+    }
+
+    public function getFillableFields()
+    {
+        return $this->model->fillable;
     }
 
     /**
