@@ -1,0 +1,20 @@
+{
+    "name": "depotwarehouse/toolbox",
+    "description": "",
+    "authors": [
+        {
+            "name": "Troy Pavlek",
+            "email": "troy@depotwarehouse.net"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "illuminate/support": "4.2.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Depotwarehouse\\Toolbox": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
