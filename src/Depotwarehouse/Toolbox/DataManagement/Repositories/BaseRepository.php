@@ -193,9 +193,25 @@ class BaseRepository implements BaseRepositoryInterface {
         return $this->model->updateable;
     }
 
+    /**
+     * Retrieves a list of searchable fields on the model, and it's associated models.
+     * @return array The list of searchable fields.
+     */
     public function getSearchableFields()
     {
-        return $this->model->searchable;
+        $searchable = array();
+        foreach ($this->model->searchable as $searchable_field) {
+            $pos = strpos($searchable_field, '*');
+            if ($pos !== false) {
+                $key = substr($searchable_field, 0, $pos - 1);
+                $model = new $this->model->relatedModels[$key];
+
+                foreach ($model->searchable as $related_searchable) {
+                    $searchable[] = $key . ":" . $related_searchable;
+                }
+            }
+        }
+        return array_merge($searchable, $this->model->searchable);
     }
 
 

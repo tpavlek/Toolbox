@@ -58,6 +58,10 @@ interface BaseRepositoryInterface {
 
     public function getUpdateableFields();
 
+    /**
+     * Retrieves a list of searchable fields on the model, and it's associated models.
+     * @return array The list of searchable fields.
+     */
     public function getSearchableFields();
 
     /**
