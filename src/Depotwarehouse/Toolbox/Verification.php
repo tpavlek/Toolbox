@@ -22,6 +22,24 @@ class Verification {
         }
     }
 
+
+    /**
+     * Filters an array based on its keys starting with a string
+     * @param array $array The array of key => values to be filtered
+     * @param string $pattern A string representing the start of the desired key(s)
+     * @return array The array filtered by key
+     */
+    static function array_filter_starts_with(array $array, $pattern) {
+        $results = array();
+        array_walk($array, function ($value, $key) use ($pattern, &$results) {
+            if (starts_with($key, $pattern)) {
+                $results[$key] = $value;
+            }
+        });
+
+        return $results;
+    }
+
     static function array_filter_null(array $array) {
         return array_filter($array, "self::is_not_null");
     }

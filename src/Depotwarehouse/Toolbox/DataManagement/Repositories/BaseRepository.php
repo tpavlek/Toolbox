@@ -22,7 +22,7 @@ class BaseRepository implements BaseRepositoryInterface {
     const OBJECT_UPDATED = 202;
 
 
-    /** @var \Eloquent  */
+    /** @var BaseModel  */
     protected $model;
 
     /** @var \Depotwarehouse\Toolbox\DataManagement\Validators\BaseValidatorInterface  */
@@ -62,7 +62,6 @@ class BaseRepository implements BaseRepositoryInterface {
                 continue;
 
             }
-            //TODO abstract this for multiple levels.
             $includePath = explode(':', $key);
             if (count($includePath) > 1) {
                 $items->whereHas(array_shift($includePath), $this->buildIncludeFilter($includePath, $items, $value));
@@ -120,7 +119,7 @@ class BaseRepository implements BaseRepositoryInterface {
         }
 
         // Todo is this enough?
-        if (!array_key_exists("last_seen", $attributes)) {
+        if (!array_key_exists("last_seen", $attributes) && in_array("last_seen", $this->model->fillable)) {
             $attributes['last_seen'] = Carbon::now()->toDateTimeString();
         }
 
