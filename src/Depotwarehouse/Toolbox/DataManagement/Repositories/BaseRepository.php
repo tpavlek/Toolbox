@@ -68,7 +68,6 @@ class BaseRepository implements BaseRepositoryInterface {
             $postFilter($items);
         }
 
-        dd($items->toSql());
 
         return $items->paginate(Config::get('pagination.per_page'));
     }
