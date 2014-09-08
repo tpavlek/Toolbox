@@ -22,7 +22,7 @@ class BaseModel extends \Eloquent {
     public $relatedModels = array();
 
     public function __construct(array $attributes = array()) {
-        parent::__construct($attributes);
+
         $this->fillable = array();
         if (!is_null($this->meta)) {
             foreach ($this->meta as $property => $flags) {
@@ -33,6 +33,7 @@ class BaseModel extends \Eloquent {
             }
         }
         $this->guarded = array();
+        parent::__construct($attributes);
     }
 
 } 
