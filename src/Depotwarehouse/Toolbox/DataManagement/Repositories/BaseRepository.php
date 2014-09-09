@@ -173,24 +173,26 @@ class BaseRepository implements BaseRepositoryInterface {
     public function update($id, array $attributes = array())
     {
         try {
-            $this->find($id);
+            $object = $this->find($id);
+
+            $attributes = array_only($attributes, $this->getUpdateableFields());
+
+            try {
+                $this->validator->updateValidate($attributes);
+            } catch (ValidationException $ex) {
+                throw $ex;
+            }
+
+            // todo catch exceptions here?
+            $object->update($attributes);
+            return self::OBJECT_UPDATED;
+
         } catch (ModelNotFoundException $ex) {
             $this->create(array_merge([ 'id' => $id ], $attributes));
             return self::OBJECT_CREATED;
         }
 
-        $attributes = array_only($attributes, $this->getUpdateableFields());
 
-        try {
-            $this->validator->updateValidate($attributes);
-        } catch (ValidationException $ex) {
-            throw $ex;
-        }
-
-
-        // todo catch exceptions here?
-        $this->model->update($attributes);
-        return self::OBJECT_UPDATED;
     }
 
 
