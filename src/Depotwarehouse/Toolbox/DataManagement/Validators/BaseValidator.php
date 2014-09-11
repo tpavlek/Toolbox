@@ -2,7 +2,7 @@
 
 namespace Depotwarehouse\Toolbox\DataManagement\Validators;
 
-interface BaseValidatorInterface {
+class BaseValidator implements BaseValidatorInterface {
 
     /**
      * Validates the input based on creating a new object
@@ -10,8 +10,10 @@ interface BaseValidatorInterface {
      * @return void
      * @throws \Depotwarehouse\Toolbox\Exceptions\ValidationException
      */
-    public static function validate(array $input);
-
+    public static function validate(array $input)
+    {
+        // TODO: Implement validate() method.
+    }
 
     /**
      * Validates the input based on updating an existing object
@@ -19,5 +21,8 @@ interface BaseValidatorInterface {
      * @return void
      * @throws \Depotwarehouse\Toolbox\Exceptions\ValidationException
      */
-    public static function updateValidate(array $input);
-} 
+    public static function updateValidate(array $input)
+    {
+        // TODO: Implement updateValidate() method.
+    }
+}
