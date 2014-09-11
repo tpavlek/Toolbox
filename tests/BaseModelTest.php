@@ -70,15 +70,7 @@ class BaseModelTest extends PHPUnit_Framework_TestCase {
         $this->assertAttributeEmpty('guarded', $baseModel, "Guarded Array Contains values: " . implode(',', $baseModel->guarded));
     }
 
-    /**
-     * Creates the application.
-     *
-     * Needs to be implemented by subclasses.
-     *
-     * @return \Symfony\Component\HttpKernel\HttpKernelInterface
-     */
-    public function createApplication()
-    {
+    public function testMetaOverriddenFromBaseClass() {
 
     }
 }
