@@ -14,17 +14,15 @@ class BaseModel extends Model {
     public $fillable = array();
     public $updateable = array();
     public $searchable = array();
+    public $guarded = array('*');
     public $relatedModels = array();
 
     protected $meta = array();
 
     public function __construct(array $attributes = array()) {
-
-        $this->fillable = array();
-        if (!is_null($this->meta)) {
+        if (!is_null($this->meta) && count($this->meta) > 0) {
             $this->processMeta($this->meta);
         }
-        $this->guarded = array();
         parent::__construct($attributes);
     }
 
@@ -34,7 +32,8 @@ class BaseModel extends Model {
     }
 
     private function processMeta(array $meta) {
-        foreach ($this->meta as $property => $flags) {
+        $this->guarded = array();
+        foreach ($meta as $property => $flags) {
             /** @var $property string */
             foreach ($flags as $flag) {
                 $this->{$flag}[]= $property;

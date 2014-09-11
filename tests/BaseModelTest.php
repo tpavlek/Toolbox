@@ -48,8 +48,26 @@ class BaseModelTest extends PHPUnit_Framework_TestCase {
 
     }
 
-    public function testEmptyMeta() {
+    public function testMetaDefaultsEmpty() {
+        $baseModel = new BaseModel;
 
+        $this->assertAttributeEmpty('meta', $baseModel);
+    }
+
+    public function testGuardedDefaultsAll() {
+        $baseModel = new BaseModel;
+
+        $this->assertAttributeContains('*', 'guarded', $baseModel);
+    }
+
+    public function testGuardedDisabledWhenAnyMetaPassed() {
+        $meta = [
+            'id' => [ BaseModel::FILLABLE ]
+        ];
+        $baseModel = new BaseModel;
+        $baseModel->setMeta($meta);
+
+        $this->assertAttributeEmpty('guarded', $baseModel, "Guarded Array Contains values: " . implode(',', $baseModel->guarded));
     }
 
     /**
