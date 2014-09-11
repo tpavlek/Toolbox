@@ -4,6 +4,12 @@ namespace Depotwarehouse\Toolbox\DataManagement\EloquentModels;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Class BaseModel
+ *
+ * Used as a helpful wrapper around Eloquent Models to extend common functionality and reduce boilerplate.
+ * @package Depotwarehouse\Toolbox\DataManagement\EloquentModels
+ */
 class BaseModel extends Model {
 
     /**
