@@ -16,7 +16,7 @@ class Verification {
      */
     static function require_set(array $array, array $attributes) {
         foreach ($attributes as $attribute) {
-            if (!array_key_exists($attribute, $array) || $array[$attribute] === null) {
+            if (!array_key_exists($attribute, $array) || is_null($array[$attribute]) || (is_string($array[$attribute])  && $array[$attribute] == "")) {
                 throw new ParameterRequiredException($attribute);
             }
         }
