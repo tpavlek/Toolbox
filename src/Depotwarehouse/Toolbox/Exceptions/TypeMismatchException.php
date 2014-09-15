@@ -10,7 +10,7 @@ class TypeMismatchException extends \Exception {
             $given_type = get_class($parameter);
         }
 
-        $message = "Type mismatch exception: {$argument} expected type {$expected_type}, recieved {$given_type}";
+        $message = "Type mismatch exception: {$argument} expected type {$expected_type}, received {$given_type}";
         parent::__construct($message);
     }
 
