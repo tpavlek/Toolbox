@@ -22,5 +22,10 @@
             "Depotwarehouse\\Toolbox\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\Integration\\": "tests/Integration"
+        }
+    },
     "minimum-stability": "stable"
 }

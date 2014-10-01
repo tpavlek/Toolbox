@@ -41,7 +41,21 @@ class BaseModel extends Model {
      * @var array
      */
     public $guarded = array('*');
+
     /**
+     * Array containing information about associated relationships.
+     *
+     * The format of the array contains keys which relate to the column_name's in the meta array below.
+     * For example, if the meta array contained [ 'contacts:*' => [ BaseModel::SEARCHABLE ] ]
+     * then the relatedModels array would contain a link between 'contacts' and the fully qualified class name
+     * of the object that represents contacts. Eg.
+     *
+     * ```.language-php
+     * [
+     *      'contacts' => '\Vendor\Package\Models\Contact'
+     * ]
+     * ```
+     *
      * @var array
      */
     public $relatedModels = array();

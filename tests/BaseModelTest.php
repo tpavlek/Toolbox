@@ -11,7 +11,7 @@ class BaseModelTest extends PHPUnit_Framework_TestCase {
 
         $capsule->addConnection([
             'driver' => 'sqlite',
-            'database' => __DIR__.'/test-db.sqlite',
+            'database' => ':memory:',
             'prefix' => ''
         ]);
         $capsule->bootEloquent();

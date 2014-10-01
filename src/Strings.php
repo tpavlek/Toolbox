@@ -16,4 +16,19 @@ class Strings {
         }
         return $randomString;
     }
+
+    /**
+     * Parses single or comma-separated lists of IDs into arrays
+     * @param string $ids Either a single ID or a comma-separated list of IDs
+     * @return array|string An array of IDs or a single ID
+     */
+    static function parseCommaSeparatedIDs($ids) {
+        $list = array_unique(explode(',', $ids));
+        if (count($list) > 1) {
+            sort($list);
+            return $list;
+        }
+
+        return $ids;
+    }
 }

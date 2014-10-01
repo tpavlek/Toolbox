@@ -7,11 +7,11 @@ use Depotwarehouse\Toolbox\DataManagement\Validators\BaseValidatorInterface;
 use Depotwarehouse\Toolbox\Exceptions\ParameterRequiredException;
 use Depotwarehouse\Toolbox\Exceptions\ValidationException;
 
+use Depotwarehouse\Toolbox\Strings;
 use Depotwarehouse\Toolbox\Verification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-use Eloquent;
 use Config;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -34,7 +34,6 @@ class BaseRepository implements BaseRepositoryInterface {
         $this->validator = $validator;
     }
 
-
     /**
      * Returns all instances of the model
      * @return \Illuminate\Database\Eloquent\Collection|static[]
@@ -48,7 +47,9 @@ class BaseRepository implements BaseRepositoryInterface {
     {
         $items = $this->model->newQuery();
         foreach ($filters as $key => $value) {
+            // If the key of a filter contains a colon, it represents the property of an object.
             if (strpos($key, ':') === FALSE) {
+                // This is just a standard key, so we can directly where it.
                 try {
                     $pair = Verification::getOpValuePair($value);
                     $items->where($key, $pair['op'], $pair['value']);
@@ -112,22 +113,21 @@ class BaseRepository implements BaseRepositoryInterface {
 
     /**
      * Finds specific instances a model by ID(s)
-     * @param $id string|int Either an integer ID or a comma separated string of IDs.
-     * @return \Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model|\Illuminate\Support\Collection|static
+     * @param $id string|int  Either an integer ID or a comma separated string of IDs.
+     * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Support\Collection|static
+     * @throws ModelNotFoundException
      */
     public function find($id)
     {
-        $list = array_unique(explode(',', $id));
-        sort($list);
-
-        if (count($list) > 1) {
-            $terms = new Collection();
-            foreach ($list as $term_id) {
-                $terms->push($this->model->findOrFail($term_id));
+        $ids = Strings::parseCommaSeparatedIDs($id);
+        if (is_array($ids)) {
+            $items = new Collection();
+            foreach ($ids as $id) {
+                $items->push($this->model->findOrFail($id));
             }
-
-            return $terms;
+            return $items;
         }
+
         return $this->model->findOrFail($id);
     }
 
@@ -139,23 +139,13 @@ class BaseRepository implements BaseRepositoryInterface {
      */
     public function create(array $attributes)
     {
-        try {
-            $this->validator->validate($attributes);
-        } catch (ValidationException $ex) {
-            throw $ex;
-        }
+        // Throws a ValidationException if validation fails
+        $this->validator->validate($attributes);
 
-        // Todo is this enough?
-        if (!array_key_exists("last_seen", $attributes) && in_array("last_seen", $this->model->fillable)) {
-            $attributes['last_seen'] = Carbon::now()->toDateTimeString();
-        }
-
-
-        // todo catch excheptions here?
+        // We're only going to pass in the explicitly fillable fields - we don't want MassAssignmentExceptions!
         $attributes = array_only($attributes, $this->getFillableFields());
-        $model = $this->model->newInstance();
-        $model->fill($attributes);
-        $model->save();
+        $model = $this->model->create($attributes);
+
         return $model;
     }
 
@@ -248,6 +238,5 @@ class BaseRepository implements BaseRepositoryInterface {
         }
         return $searchable;
     }
-
 
 }
