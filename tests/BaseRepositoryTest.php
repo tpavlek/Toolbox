@@ -10,14 +10,24 @@ class BaseRepositoryTest extends PHPUnit_Framework_TestCase{
     protected $validator;
 
     public function setUp() {
-        $this->model = Mockery::mock('\Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel');
+        $capsule = new Illuminate\Database\Capsule\Manager();
+
+        $capsule->addConnection([
+            'driver' => 'sqlite',
+            'database' => __DIR__.'/test-db.sqlite',
+            'prefix' => ''
+        ]);
+        $capsule->bootEloquent();
+
+        $this->model = new \Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel();
         $this->validator = Mockery::mock('\Depotwarehouse\Toolbox\DataManagement\Validators\BaseValidator');
     }
 
     /**
      * Test that variables are properly set by the constructor.
      */
-    public function testInstantiation() {
+    public function testInstantiation()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
 
         $this->assertObjectHasAttribute('model', $repository);
@@ -25,20 +35,6 @@ class BaseRepositoryTest extends PHPUnit_Framework_TestCase{
 
         $this->assertObjectHasAttribute('validator', $repository);
         $this->assertAttributeEquals($this->validator, 'validator', $repository);
-    }
-
-    /**
-     * Test that eloquent ->all() is called. Testing the actual data returned is out of scope for this test.
-     */
-    public function testGetAll() {
-        $repository = new BaseRepository($this->model, $this->validator);
-
-        /** @var \Mockery\Mock $mockModel */
-        $mockModel = $this->model;
-
-        $mockModel->shouldReceive('all');
-
-        $repository->all();
     }
 
     public function tearDown() {
