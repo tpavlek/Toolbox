@@ -71,6 +71,6 @@ class BaseModelTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testMetaOverriddenFromBaseClass() {
-
+        // TODO test meta is set properly when a base class overrides the property
     }
 }
