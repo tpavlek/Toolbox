@@ -3,7 +3,7 @@
 
 use Depotwarehouse\Toolbox\DataManagement\Repositories\BaseRepository;
 
-class BaseRepositoryTest extends PHPUnit_Framework_TestCase{
+class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
     /** @var  Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel */
     protected $model;
     /** @var  \Depotwarehouse\Toolbox\DataManagement\Validators\BaseValidator */
