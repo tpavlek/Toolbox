@@ -2,21 +2,21 @@
 
 namespace Depotwarehouse\Toolbox\DataManagement\Repositories;
 
+use Depotwarehouse\Toolbox\DataManagement\Configuration;
 use Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel;
 use Depotwarehouse\Toolbox\DataManagement\Validators\BaseValidatorInterface;
-use Depotwarehouse\Toolbox\Exceptions\ParameterRequiredException;
 use Depotwarehouse\Toolbox\Exceptions\ValidationException;
 
+use Depotwarehouse\Toolbox\Operations\Operation;
+use Depotwarehouse\Toolbox\Operations\Operations;
 use Depotwarehouse\Toolbox\Strings;
-use Depotwarehouse\Toolbox\Verification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-use Config;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
-class BaseRepository implements BaseRepositoryInterface {
+abstract class BaseRepositoryAbstract implements BaseRepositoryInterface {
 
     const OBJECT_CREATED = 201;
     const OBJECT_UPDATED = 202;
@@ -28,11 +28,32 @@ class BaseRepository implements BaseRepositoryInterface {
     /** @var \Depotwarehouse\Toolbox\DataManagement\Validators\BaseValidatorInterface  */
     protected $validator;
 
+    /** @var  \Depotwarehouse\Toolbox\DataManagement\Configuration */
+    protected $configuration;
 
     public function __construct(BaseModel $model, BaseValidatorInterface $validator) {
         $this->model = $model;
         $this->validator = $validator;
     }
+
+    /**
+     * Resolves the configuration object of the class.
+     *
+     * In order to decouple from frameworks, configuration of this class is done through a Configuration object.
+     * However, since this class is meant to be overridden, putting Configuration instantiation in the constructor
+     * would require significant boilerplate on the part of the user in order to instantiate and explicitly call
+     * constructors with a Configuration object.
+     *
+     * Rather, the user must implement the abstract method to resolve configuration. This method has a single function
+     * which is to simply set $this->configuration to a Configuration object acceptable to the client.
+     *
+     * It is recommended that each project implement resolveConfiguration in a single BaseRepository, then have
+     * all your repositories extend from that, however you are welcome to implement the function on a per-repository
+     * basis
+     *
+     * @return void
+     */
+    abstract function resolveConfiguration();
 
     /**
      * Returns all instances of the model
@@ -43,45 +64,45 @@ class BaseRepository implements BaseRepositoryInterface {
         return $this->model->all();
     }
 
+    /**
+     * @param array $filters
+     * @param callable $postFilter
+     * @return \Illuminate\Pagination\Paginator
+     * @throws \Depotwarehouse\Toolbox\Exceptions\ArrayEmptyException
+     */
     public function filter($filters = array(), Callable $postFilter = null)
     {
         $items = $this->model->newQuery();
-        foreach ($filters as $key => $value) {
-            // If the key of a filter contains a colon, it represents the property of an object.
-            if (strpos($key, ':') === FALSE) {
-                // This is just a standard key, so we can directly where it.
-                try {
-                    $pair = Verification::getOpValuePair($value);
-                    $items->where($key, $pair['op'], $pair['value']);
-                } catch (ParameterRequiredException $exception) {
-                    $items->where($key, $value);
-                }
-                continue;
+        $operations = Operations::getOperationsFromArrayOfFilters($filters);
 
+        foreach ($operations as $operation) {
+            if (! $operation->hasIncludes()) {
+                $items->where($operation->key, $operation->operation, $operation->value);
+                continue;
             }
-            $includePath = explode(':', $key);
-            if (count($includePath) > 1) {
-                $items->whereHas(array_shift($includePath), $this->buildIncludeFilter($includePath, $items, $value));
-            }
+
+            $items->whereHas($operation->pullInclude(), $this->buildIncludeFilter($operation, $items));
         }
 
         if ($postFilter !== null) {
             $postFilter($items);
         }
 
+        // We must make sure configuration is resolved first
+        $this->resolveConfiguration();
 
-        return $items->paginate(Config::get('pagination.per_page'));
+        return $items->paginate($this->configuration->pagination['per_page']);
     }
 
-    private function buildIncludeFilter(array &$includePath, Builder &$items, $value) {
-        $current_include = array_shift($includePath);
-        if (count($includePath) == 0) {
-            return function ($query) use ($current_include, $value) {
-                $query->where($current_include, $value);
+    private function buildIncludeFilter(Operation $operation, Builder &$items) {
+        if (! $operation->hasIncludes()) {
+            return function ($query) use ($operation) {
+                $query->where($operation->key, $operation->operation, $operation->value);
             };
         }
-        return function($query) use ($current_include, $includePath, $items, $value) {
-            $query->whereHas($current_include, $this->buildIncludeFilter($includePath, $items, $value));
+        // We currently have more items left in the include path, so we'll recurse
+        return function($query) use ($operation, $items) {
+            $query->whereHas($operation->pullInclude(), $this->buildIncludeFilter($operation, $items));
         };
     }
 

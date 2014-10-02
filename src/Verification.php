@@ -57,34 +57,4 @@ class Verification {
     private static function is_not_null($var) {
         return !is_null($var);
     }
-
-
-    /**
-     * Returns a pair of the operation and it's right-hand-side value, based on a string passed in.
-     *
-     * For example, given the string "<=9" the return would be [ 'op' => '<=', 'value' => 9 ].
-     * Supported operations are
-     * # <
-     * # >
-     * # <=
-     * # >=
-     * # =
-     * The value section is required to be alphanumeric only.
-     * @param string $string Arbitrary string to parse for operations and values
-     * @throws InvalidArgumentException
-     * @return array Contains operations an values eg. [ 'op' => '=', 'value' => 12 ]
-     */
-    public static function getOpValuePair($string) {
-        $operation = array();
-        $value = array();
-        $allowedValues = "[A-Za-z0-9]"; // The allowed characters in a value string
-
-        if (preg_match("/^([<>]((?={$allowedValues})|[^<>])|[=]((?={$allowedValues})|[^=<>]))/", $string, $operation)) {
-            if (preg_match("/{$allowedValues}+$/", $string, $value)) {
-                return [ 'op' => $operation[0], 'value' => $value[0] ];
-            }
-            throw new InvalidArgumentException("String must end with [A-Za-z0-9], given: " . $string);
-        }
-        throw new InvalidArgumentException("String must start with [<>=], given: " . $string);
-    }
 } 

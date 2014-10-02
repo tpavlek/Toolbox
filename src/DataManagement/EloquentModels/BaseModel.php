@@ -45,8 +45,8 @@ class BaseModel extends Model {
     /**
      * Array containing information about associated relationships.
      *
-     * The format of the array contains keys which relate to the column_name's in the meta array below.
-     * For example, if the meta array contained [ 'contacts:*' => [ BaseModel::SEARCHABLE ] ]
+     * The format of the array contains keys which relate to the function names of the relationships.
+     * For example, if the class contains a method 'contacts' which is a relationship method to some Contact model
      * then the relatedModels array would contain a link between 'contacts' and the fully qualified class name
      * of the object that represents contacts. Eg.
      *
