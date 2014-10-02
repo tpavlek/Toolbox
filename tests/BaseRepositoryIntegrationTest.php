@@ -155,6 +155,28 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
             $this->assertEquals('Item', $exception->getModel());
         }
     }
+
+    public function testGetSearchableFields() {
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        // Test without related models
+        $fields = $repository->getSearchableFields(false);
+        $this->assertInternalType("array", $fields);
+        $this->assertEquals(2, count($fields));
+        $this->assertContains('name', $fields);
+        $this->assertContains('description', $fields);
+
+        // Test with related models
+        // Should return distinct lists to a maximum depth of 5.
+        $fields = $repository->getSearchableFields(true);
+        var_dump($fields);
+        $this->assertInternalType("array", $fields);
+        $this->assertEquals(4, count($fields));
+        $this->assertContains('name', $fields);
+        $this->assertContains('description', $fields);
+        $this->assertContains('oitem:title', $fields);
+        //$this->assertContains('oitem:titem:slug', $fields);
+    }
 }
 
 class BaseRepository extends \Depotwarehouse\Toolbox\DataManagement\Repositories\BaseRepositoryAbstract {
@@ -182,14 +204,49 @@ class BaseRepository extends \Depotwarehouse\Toolbox\DataManagement\Repositories
 
 class Item extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel {
 
+    public $relatedModels = [
+        'oitem' => 'OtherItem'
+    ];
+
     protected $meta = [
         'id' => [ self::GUARDED ],
         'name' => [ self::FILLABLE, self::SEARCHABLE, self::UPDATEABLE ],
-        'description' => [ self::FILLABLE, self::UPDATEABLE, self::SEARCHABLE ]
+        'description' => [ self::FILLABLE, self::UPDATEABLE, self::SEARCHABLE ],
+        'oitem:*' => [ self::SEARCHABLE ]
     ];
 
     public function __construct(array $attributes = array()) {
         parent::__construct($attributes);
     }
 
+}
+
+class OtherItem extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel {
+
+    public $relatedModels = [
+        'titem' => 'ThirdItem'
+    ];
+    protected $meta = [
+        'title' => [ self::FILLABLE, self::SEARCHABLE ],
+        //'titem:*' => [ self::SEARCHABLE ]
+    ];
+
+    public function __construct(array $attributes = array()) {
+        parent::__construct($attributes);
+    }
+}
+
+class ThirdItem extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel {
+
+    public $relatedModels = [
+        'item' => 'Item'
+    ];
+    protected $meta = [
+        'slug' => [ self::FILLABLE, self::SEARCHABLE ],
+        'item:*' => [ self::SEARCHABLE ],
+    ];
+
+    public function __construct(array $attributes = array()) {
+        parent::__construct($attributes);
+    }
 }

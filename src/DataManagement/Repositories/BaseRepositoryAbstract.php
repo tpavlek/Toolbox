@@ -235,29 +235,114 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface {
 
     /**
      * Retrieves a list of searchable fields on the model, and it's associated models.
+     * @param bool $with_related Searches the related models as well. Set to false to disable this (increases efficiency)
      * @return array The list of searchable fields.
      */
     public function getSearchableFields($with_related = true)
     {
-        $searchable = array();
+        $this->resolveConfiguration();
+        $searchable = [];
         foreach ($this->model->searchable as $searchable_field) {
             // If we don't want related models, exclude everything with a colon
-            if (!$with_related && strpos($searchable_field, ':') !== false) {
-                continue;
-            }
-            $pos = strpos($searchable_field, '*');
-            if ($pos !== false) {
-                $key = substr($searchable_field, 0, $pos - 1);
-                $model = new $this->model->relatedModels[$key];
-
-                foreach ($model->searchable as $related_searchable) {
-                    $searchable[] = $key . ":" . $related_searchable;
+            $is_related = strpos($searchable_field, Operation::INCLUDE_PATH_KEY);
+            if ($is_related !== false) {
+                if (!$with_related) {
+                    continue;
                 }
-            } else {
-                $searchable[]= $searchable_field;
+
+                $this->resolveSearchablePath(explode(Operation::INCLUDE_PATH_KEY, $searchable_field), $this->model, $searchable);
+
+
+                $related_path = explode(Operation::INCLUDE_PATH_KEY, $searchable_field);
+                $current_include = array_pop($related_path);
+                $this->newParse($related_path, $current_include);
             }
+
+            // It's not a related attribute, so just add it
+            $searchable[] = $searchable_field;
+
         }
         return $searchable;
+    }
+
+    public function retrieveSearchableFields($class = null, array $selected_fields = array(), array &$result = array(), $current_path = "", $current_depth = 1) {
+        $searchable = [];
+        $model = null;
+        if ( ! is_null($class)) {
+            /** @var BaseModel $model */
+            $model = new $class;
+            if (count($selected_fields) > 0) {
+                $searchable = array_intersect($model->searchable, $selected_fields);
+            } else {
+                $searchable = $model->searchable;
+            }
+
+        } else {
+            $model = $this->model;
+            $searchable = $this->model->searchable;
+        }
+
+        foreach ($searchable as $field) {
+            $is_include = strpos($field, Operation::INCLUDE_PATH_KEY);
+            if ($is_include !== false) {
+                if ($this->configuration->include["max_depth"] >= $current_depth) {
+                    // We can't decend, we've already reached our maximum
+                    continue;
+                }
+                $this->retrieveSearchableFields(
+                    $model->relatedModels[substr($field, 0, $is_include -1)]
+                )
+            }
+            $result[] = $current_path . $searchable;
+        }
+
+
+
+    }
+
+    private function resolveSearchablePath(array $path, BaseModel $current_model, array &$paths, $path_string = "") {
+        if (count($path) == 1) {
+            if ($path[0] == "*") {
+                foreach ($current_model->searchable as $searchable_field) {
+                    $this->resolveSearchablePath([], )
+                }
+            }
+        }
+        $current_path = array_shift($path);
+        $path_string .= $current_path;
+    }
+
+    private function newParse(array $related_path, $current_include, $current_prefix = "", $current_depth = 1) {
+        if ($current_depth >= $this->configuration->include["max_depth"]) {
+            // We've gone as far as we can go, back home.
+            return [];
+        }
+
+        if (count($related_path) == 0) {
+            return array_merge()
+        }
+    }
+
+    private function parseRelated($related_path, &$searchable_array, $current_prefix = "", $current_depth = 1) {
+        $is_wildcard = strpos($related_path, '*');
+        if ($is_wildcard !== false) {
+
+            $key = substr($related_path, 0, $is_wildcard - 1);
+            $related_model = new $this->model->relatedModels[$key];
+            $new_prefix = $current_prefix . substr($related_path, 0, $is_wildcard);
+
+            foreach ($related_model->searchable as $related_searchable) {
+                // Does the current related searchable contain an include path? If so, recurse
+                if (strpos($related_searchable, Operation::INCLUDE_PATH_KEY) !== false) {
+                    $this->parseRelated(substr($related_path, $is_wildcard), $searchable_array, $new_prefix, $current_depth++);
+                    continue;
+                }
+                // If we don't have an include path, we've found a guy, let's add it to the array
+                $searchable_array[] = $new_prefix . $related_searchable;
+            }
+        } else {
+            $searchable[]= $related_path;
+        }
     }
 
 }
