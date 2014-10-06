@@ -10,6 +10,8 @@ namespace Depotwarehouse\Toolbox\DataManagement\Repositories;
 
 
 
+use Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel;
+
 interface BaseRepositoryInterface {
 
     /**
@@ -67,11 +69,7 @@ interface BaseRepositoryInterface {
 
     public function getUpdateableFields();
 
-    /**
-     * Retrieves a list of searchable fields on the model, and it's associated models.
-     * @return array The list of searchable fields.
-     */
-    public function getSearchableFields($with_related = true);
+    public function getSearchableFields(BaseModel $model = null, $with_related = true, $current_depth = 1, &$searchable_array = array(), $requested_searchable_field = "*");
 
     /**
      * @return \Illuminate\Pagination\Paginator

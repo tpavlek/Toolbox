@@ -160,7 +160,7 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $repository = new BaseRepository($this->model, $this->validator);
 
         // Test without related models
-        $fields = $repository->getSearchableFields(false);
+        $fields = $repository->getSearchableFields(null, false);
         $this->assertInternalType("array", $fields);
         $this->assertEquals(2, count($fields));
         $this->assertContains('name', $fields);
@@ -168,14 +168,14 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
 
         // Test with related models
         // Should return distinct lists to a maximum depth of 5.
-        $fields = $repository->getSearchableFields(true);
+        $fields = $repository->getSearchableFields(null, true);
         var_dump($fields);
         $this->assertInternalType("array", $fields);
         $this->assertEquals(4, count($fields));
         $this->assertContains('name', $fields);
         $this->assertContains('description', $fields);
         $this->assertContains('oitem:title', $fields);
-        //$this->assertContains('oitem:titem:slug', $fields);
+        $this->assertContains('oitem:titem:slug', $fields);
     }
 }
 
@@ -228,7 +228,7 @@ class OtherItem extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\Ba
     ];
     protected $meta = [
         'title' => [ self::FILLABLE, self::SEARCHABLE ],
-        //'titem:*' => [ self::SEARCHABLE ]
+        'titem:*' => [ self::SEARCHABLE ]
     ];
 
     public function __construct(array $attributes = array()) {
@@ -243,7 +243,7 @@ class ThirdItem extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\Ba
     ];
     protected $meta = [
         'slug' => [ self::FILLABLE, self::SEARCHABLE ],
-        'item:*' => [ self::SEARCHABLE ],
+        //'item:*' => [ self::SEARCHABLE ],
     ];
 
     public function __construct(array $attributes = array()) {
