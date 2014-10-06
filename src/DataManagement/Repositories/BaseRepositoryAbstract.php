@@ -25,7 +25,6 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
     const OBJECT_CREATED = 201;
     const OBJECT_UPDATED = 202;
 
-
     /** @var BaseModel */
     protected $model;
 
@@ -60,6 +59,14 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
      */
     abstract function resolveConfiguration();
 
+    /**
+     * Gets the current configuration of the repository.
+     *
+     * This function will first call the mandatory abstract callback to resolve the configuration. If the configuration
+     * object is not set properly by resolveConfiguration, errors and exceptions will be rampant.
+     *
+     * @return Configuration
+     */
     private function getConfiguration() {
         $this->resolveConfiguration();
         return $this->configuration;
@@ -75,21 +82,49 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
     }
 
     /**
+     * Returns all items that exist, separated by pages.
      * @return \Illuminate\Pagination\Paginator
      */
     public function paginate()
     {
-        $factory = new Factory();
-        $all = $this->all();
-        $paginator = new Paginator($factory, $all->all(), $all->count(), $this->getConfiguration()->pagination["per_page"]);
+        return $this->handlePaginate($this->all());
+    }
+
+    /**
+     * Paginates a collection.
+     * @param Collection $items
+     * @return Paginator
+     */
+    private function handlePaginate(Collection $items) {
+        $factory = new Factory($this->getConfiguration()->pagination["page_name"]);
+        if (isset($_GET[$factory->getPageName()]) and $current_page = $_GET[$factory->getPageName()]) {
+            $factory->setCurrentPage($current_page);
+        } else {
+            $factory->setCurrentPage(1);
+        }
+
+        $paginator = $factory->make($items->all(), $items->count(), $this->getConfiguration()->pagination["per_page"]);
         return $paginator;
     }
 
     /**
+     * Filters a list of items based on passed filters.
+     *
+     * The acceptable filters are anything parseable by the Operation class. The usage of this function should be
+     * used primarily when there are specific attributes of a set of items that you are wishing to show eg. All users
+     * who live in Edmonton.
+     *
+     * In constrast, the search function below should be used if you're looking for a *specific* item eg. a user named
+     * Bob in Edmonton.
+     *
+     * For some advanced filtering techniques that aren't easily abstractable for multiple use-cases you may pass
+     * an optional $postFilter callback function. The callback function will accept a single Builder argument. When
+     * using this callback ensure that you do not call ->get() on the Builder, as that will be called by the filter
+     * function.
+     *
      * @param array $filters
-     * @param callable $postFilter
+     * @param callable $postFilter A callback function to be applied to the Builder before it is executed.
      * @return \Illuminate\Pagination\Paginator
-     * @throws \Depotwarehouse\Toolbox\Exceptions\ArrayEmptyException
      */
     public function filter($filters = array(), Callable $postFilter = null)
     {
@@ -109,10 +144,7 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
             $postFilter($items);
         }
 
-        // We must make sure configuration is resolved first
-        $this->resolveConfiguration();
-
-        return $items->paginate($this->getConfiguration()->pagination['per_page']);
+        return $this->handlePaginate($items->get());
     }
 
     private function buildIncludeFilter(Operation $operation, Builder &$items)
@@ -130,8 +162,17 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
 
     /**
      * Searches all the searchable fields of the direct model (no related models) if they contain any of the array of terms.
+     *
      * Terms stack, eg. the function checks if any of the searchable fields match the first term AND any of the searchable fields
      * match the second term, etc.
+     *
+     * These terms are only values eg an array of terms might take the form
+     * ```.language-php
+     * [
+     *      'troy',
+     *      'pavlek'
+     * ]
+     * ```
      * @param array $terms Array of strings to search.
      * @return \Illuminate\Pagination\Paginator
      */

@@ -12,7 +12,8 @@ class Configuration {
 
     public function __construct() {
         $this->pagination = [
-            'per_page' => 2
+            'per_page' => 2,
+            'page_name' => "page"
         ];
         $this->include = [
             'max_depth' => 5

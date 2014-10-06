@@ -94,8 +94,9 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $repository = new BaseRepository($this->model, $this->validator);
         $pages = $repository->paginate();
         $this->assertInstanceOf('Illuminate\Pagination\Paginator', $pages);
-        $this->assertEquals(3, $pages->count());
-        $this->assertEquals(2, $pages->getTotal());
+        $this->assertEquals(3, $pages->count(), "Number of items is {$pages->count()}");
+        $this->assertEquals(2, $pages->getLastPage());
+        $this->assertEquals(1, $pages->getCurrentPage());
         $items = $pages->getCollection();
 
         for ($i = 0; $i < 3; $i++) {
@@ -104,6 +105,43 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
             $this->assertEquals($this->items[$i]['name'], $item->name);
             $this->assertEquals($this->items[$i]['description'], $item->description);
         }
+    }
+
+    public function testPaginateWithCurrentPageSet() {
+        $_GET["page"] = 2;
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $pages = $repository->paginate();
+        $this->assertEquals(2, $pages->getCurrentPage());
+    }
+
+    public function testPaginateWithCurrentPageTooLarge() {
+        $_GET["page"] = 10;
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $pages = $repository->paginate();
+        $last_page = $pages->getLastPage();
+        $this->assertEquals(2, $last_page);
+        $this->assertEquals($last_page, $pages->getCurrentPage());
+    }
+
+    public function testFilterWithNoArguments() {
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $pages = $repository->filter();
+        $this->assertInstanceOf('Illuminate\Pagination\Paginator', $pages);
+        $this->assertEquals(3, $pages->count());
+    }
+
+    public function testFilterWithRegularArgument() {
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $pages = $repository->filter([
+            'name' => "=Two"
+        ]);
+        $this->assertInstanceOf('Illuminate\Pagination\Paginator', $pages);
+        var_dump($pages->offsetGet(0));
+        $this->assertEquals(1, $pages->count());
     }
 
     public function testFindSingleItem() {

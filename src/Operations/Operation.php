@@ -19,8 +19,8 @@ class Operation {
 
     public function __construct($path, $operation, $value) {
         $this->computeIncludePath($path);
-        $this->operation = $operation;
-        $this->value = $value;
+        $this->operation = (is_string($value) && $operation == "=") ? "LIKE" : $operation;
+        $this->value = (is_string($value)) ? "%{$value}%" : $value;
     }
 
     /**
