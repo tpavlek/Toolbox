@@ -1,5 +1,6 @@
 <?php
 
+use Tests\Integration\Item;
 
 class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
     /** @var  Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel */
@@ -152,9 +153,29 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
             $repository->find(99);
             $this->fail("Exception should be thrown");
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $exception) {
-            $this->assertEquals('Item', $exception->getModel());
+            $this->assertEquals('Tests\Integration\Item', $exception->getModel());
         }
     }
+
+    public function testPaginate() {
+        $this->createAndSeedDatabase();
+        $repository = new BaseRepository($this->model, $this->validator);
+        $pages = $repository->paginate();
+        $this->assertInstanceOf('Illuminate\Pagination\Paginator', $pages);
+        $this->assertEquals(3, $pages->count());
+        $items = $pages->getCollection();
+
+        for ($i = 0; $i < 3; $i++) {
+            $item = $items->get($i);
+            $this->assertEquals($i + 1, $item->id);
+            $this->assertEquals($this->items[$i]['name'], $item->name);
+            $this->assertEquals($this->items[$i]['description'], $item->description);
+        }
+    }
+
+    /*public function testFilterWithoutArguments() {
+        $this->fail("Unimplemented");
+    }*/
 
     public function testGetSearchableFields() {
         $repository = new BaseRepository($this->model, $this->validator);
@@ -169,13 +190,54 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         // Test with related models
         // Should return distinct lists to a maximum depth of 5.
         $fields = $repository->getSearchableFields(null, true);
-        var_dump($fields);
         $this->assertInternalType("array", $fields);
         $this->assertEquals(4, count($fields));
         $this->assertContains('name', $fields);
         $this->assertContains('description', $fields);
-        $this->assertContains('oitem:title', $fields);
-        $this->assertContains('oitem:titem:slug', $fields);
+        $this->assertContains('Tests\Integration\OtherItem:title', $fields);
+        $this->assertContains('Tests\Integration\OtherItem:Tests\Integration\ThirdItem:slug', $fields);
+    }
+
+
+    /**
+     * @expectedException \Depotwarehouse\Toolbox\Exceptions\InvalidArgumentException
+     * @expectedExceptionMessage The requested class: Tests\Integration\ItemInterface is not instantiable
+     */
+    public function testGetSearchableFieldsWithUninstantiableRelatedModel() {
+        $model = new \Tests\Integration\ItemUninstantiableRelated();
+        $repository = new BaseRepository($model, $this->validator);
+
+        $fields = $repository->getSearchableFields();
+    }
+
+
+    /**
+     * @expectedException \Depotwarehouse\Toolbox\Exceptions\InvalidArgumentException
+     * @expectedExceptionMessage The requested class: Tests\Integration\NotFoundClass does not exist
+     */
+    public function testGetSearchableFieldsWithInvalidRelatedModel() {
+        $model = new \Tests\Integration\ItemNotFoundRelated();
+        $repository = new BaseRepository($model, $this->validator);
+
+        $fields = $repository->getSearchableFields();
+    }
+
+    public function testGetUpdateable() {
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $updateable = $repository->getUpdateableFields();
+        $this->assertEquals(2, count($updateable));
+        $this->assertContains("name", $updateable);
+        $this->assertContains("description", $updateable);
+    }
+
+    public function testGetFillable() {
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $fillable = $repository->getUpdateableFields();
+        $this->assertEquals(2, count($fillable));
+        $this->assertContains("name", $fillable);
+        $this->assertContains("description", $fillable);
     }
 }
 
@@ -197,56 +259,10 @@ class BaseRepository extends \Depotwarehouse\Toolbox\DataManagement\Repositories
      */
     public function resolveConfiguration()
     {
-        $this->configuration = new \Depotwarehouse\Toolbox\DataManagement\Configuration();
+        if (is_null($this->configuration)) {
+            $this->configuration = new \Depotwarehouse\Toolbox\DataManagement\Configuration();
+        }
     }
 
 }
 
-class Item extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel {
-
-    public $relatedModels = [
-        'oitem' => 'OtherItem'
-    ];
-
-    protected $meta = [
-        'id' => [ self::GUARDED ],
-        'name' => [ self::FILLABLE, self::SEARCHABLE, self::UPDATEABLE ],
-        'description' => [ self::FILLABLE, self::UPDATEABLE, self::SEARCHABLE ],
-        'oitem:*' => [ self::SEARCHABLE ]
-    ];
-
-    public function __construct(array $attributes = array()) {
-        parent::__construct($attributes);
-    }
-
-}
-
-class OtherItem extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel {
-
-    public $relatedModels = [
-        'titem' => 'ThirdItem'
-    ];
-    protected $meta = [
-        'title' => [ self::FILLABLE, self::SEARCHABLE ],
-        'titem:*' => [ self::SEARCHABLE ]
-    ];
-
-    public function __construct(array $attributes = array()) {
-        parent::__construct($attributes);
-    }
-}
-
-class ThirdItem extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel {
-
-    public $relatedModels = [
-        'item' => 'Item'
-    ];
-    protected $meta = [
-        'slug' => [ self::FILLABLE, self::SEARCHABLE ],
-        //'item:*' => [ self::SEARCHABLE ],
-    ];
-
-    public function __construct(array $attributes = array()) {
-        parent::__construct($attributes);
-    }
-}

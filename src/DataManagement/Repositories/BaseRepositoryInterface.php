@@ -80,11 +80,11 @@ interface BaseRepositoryInterface {
      * @param bool $with_related Default true. Do we wish to recurse into related models, or just search on the current level
      * @param int $current_depth Tracks how many recursions we have gone through (to prevent infinite recursion)
      * @param array $searchable_array A reference to everything we've found thus far. This is what we return.
+     * @param array $previous_objects A list of class names from objects we've already visited, to prevent cycles
      * @param string $requested_searchable_path The current path that we've included so far, listed as colon-separated keys of relatedModels
      * @return array The available searchable fields.
-     * @throws InvalidArgumentException
      */
-    public function getSearchableFields(BaseModel $model = null, $with_related = true, $current_depth = 1, &$searchable_array = array(), $requested_searchable_field = "*");
+    public function getSearchableFields(BaseModel $model = null, $with_related = true, $current_depth = 1, &$searchable_array = array(), array &$previous_objects = array(), $requested_searchable_path = "*");
 
     /**
      * @return \Illuminate\Pagination\Paginator

@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 use Carbon\Carbon;
+use Illuminate\Pagination\Factory;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 
 abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
@@ -48,7 +50,7 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
      * constructors with a Configuration object.
      *
      * Rather, the user must implement the abstract method to resolve configuration. This method has a single function
-     * which is to simply set $this->configuration to a Configuration object acceptable to the client.
+     * which is to simply set $this->getConfiguration() to a Configuration object acceptable to the client.
      *
      * It is recommended that each project implement resolveConfiguration in a single BaseRepository, then have
      * all your repositories extend from that, however you are welcome to implement the function on a per-repository
@@ -58,6 +60,11 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
      */
     abstract function resolveConfiguration();
 
+    private function getConfiguration() {
+        $this->resolveConfiguration();
+        return $this->configuration;
+    }
+
     /**
      * Returns all instances of the model
      * @return \Illuminate\Database\Eloquent\Collection|static[]
@@ -65,6 +72,17 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
     public function all()
     {
         return $this->model->all();
+    }
+
+    /**
+     * @return \Illuminate\Pagination\Paginator
+     */
+    public function paginate()
+    {
+        $factory = new Factory();
+        $all = $this->all();
+        $paginator = new Paginator($factory, $all->all(), $this->getConfiguration()->pagination["per_page"]);
+        return $paginator;
     }
 
     /**
@@ -94,7 +112,7 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
         // We must make sure configuration is resolved first
         $this->resolveConfiguration();
 
-        return $items->paginate($this->configuration->pagination['per_page']);
+        return $items->paginate($this->getConfiguration()->pagination['per_page']);
     }
 
     private function buildIncludeFilter(Operation $operation, Builder &$items)
@@ -216,13 +234,6 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
         return $this->model->destroy($id);
     }
 
-    /**
-     * @return \Illuminate\Pagination\Paginator
-     */
-    public function paginate()
-    {
-        return $this->model->paginate(Config::get('pagination.per_page'));
-    }
 
     public function getFillableFields()
     {
@@ -247,14 +258,15 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
      * @param bool $with_related Default true. Do we wish to recurse into related models, or just search on the current level
      * @param int $current_depth Tracks how many recursions we have gone through (to prevent infinite recursion)
      * @param array $searchable_array A reference to everything we've found thus far. This is what we return.
+     * @param array $previous_objects A list of class names from objects we've already visited, to prevent cycles
      * @param string $requested_searchable_path The current path that we've included so far, listed as colon-separated keys of relatedModels
      * @return array The available searchable fields.
      * @throws InvalidArgumentException
      */
-    public function getSearchableFields(BaseModel $model = null, $with_related = true, $current_depth = 1, &$searchable_array = array(), $requested_searchable_path = "*")
+    public function getSearchableFields(BaseModel $model = null, $with_related = true, $current_depth = 1, &$searchable_array = array(), array &$previous_objects = array(), $requested_searchable_path = "*")
     {
-        $this->resolveConfiguration();
         $model = ($model === null) ? $this->model : $model;
+        $previous_objects[] = get_class($model);
         foreach ($model->searchable as $searchable_field) {
 
             // Gets the current path, and pops the end off it, used for constructing subsequent paths.
@@ -271,27 +283,32 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
                 }
 
                 // If we've reached the max recursion depth, we don't want to recurse into the next model.
-                if ($current_depth > $this->configuration->include["max_depth"]) {
+                if ($current_depth > $this->getConfiguration()->include["max_depth"]) {
                     continue;
                 }
 
                 $related_path_array = explode(Operation::INCLUDE_PATH_KEY, $searchable_field);
-                $key = $related_path_array[0];
-                if (!array_key_exists($key, $model->relatedModels)) {
-                    throw new InvalidArgumentException("The related models array for: " . get_class($model) . " did not contain key: " . $key);
+                $new_model_path = $related_path_array[0];
+
+                try {
+                    $reflection = new \ReflectionClass($new_model_path);
+                    if (!$reflection->isInstantiable()) {
+                        throw new InvalidArgumentException("The requested class: " . $new_model_path . " is not instantiable");
+                    }
+
+                    if (in_array($reflection->getName(), $previous_objects)) {
+                        // We're about to recurse onto an object that we've already visited, skip it.
+                        continue;
+                    }
+
+                    $next_model = $reflection->newInstance();
+                    $requested_searchable_path_array = array_merge($requested_searchable_path_array, $related_path_array);
+
+                    $this->getSearchableFields($next_model, true, ++$current_depth, $searchable_array, $previous_objects, implode(Operation::INCLUDE_PATH_KEY, $requested_searchable_path_array));
+                    continue;
+                } catch (\ReflectionException $exception) {
+                    throw new InvalidArgumentException("The requested class: " . $new_model_path . " does not exist");
                 }
-
-                $new_model_path = $model->relatedModels[$key];
-                $reflection = new \ReflectionClass($new_model_path);
-                if (!$reflection->isInstantiable()) {
-                    throw new InvalidArgumentException("The requested class: " . $new_model_path . " is not instantiable");
-                }
-
-                $next_model = new $new_model_path;
-                $requested_searchable_path_array = array_merge($requested_searchable_path_array, $related_path_array);
-
-                $this->getSearchableFields($next_model, true, $current_depth++, $searchable_array, implode(Operation::INCLUDE_PATH_KEY, $requested_searchable_path_array));
-                continue;
             }
 
 
@@ -299,12 +316,15 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
             if ($requested_searchable_field == "*" || $requested_searchable_field == $searchable_field) {
                 // Twiddly bits, we reconstruct the path using all but the last of the requested path, and the current searchable
                 $requested_searchable_path_array[] = $searchable_field;
+                $requested_searchable_path_array = array_unique($requested_searchable_path_array);
                 $searchable_array[] = implode(Operation::INCLUDE_PATH_KEY, $requested_searchable_path_array);
             }
 
             // Nothing more to do.
 
         }
-        return $searchable_array;
+
+        return array_unique($searchable_array);
     }
+
 }
