@@ -11,6 +11,7 @@ namespace Depotwarehouse\Toolbox\DataManagement\Repositories;
 
 
 use Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel;
+use Depotwarehouse\Toolbox\Exceptions\InvalidArgumentException;
 
 interface BaseRepositoryInterface {
 
@@ -69,6 +70,20 @@ interface BaseRepositoryInterface {
 
     public function getUpdateableFields();
 
+    /**
+     * Constructs and returns an array of the fields by which a model can be searched.
+     *
+     * GetSearchableFields will return all the fields declared searchable on the current model, as well as
+     * recursively searching related models and returning their searchable fields.
+     *
+     * @param BaseModel $model Default null. If provided, we will use that class for getting searchable fields.
+     * @param bool $with_related Default true. Do we wish to recurse into related models, or just search on the current level
+     * @param int $current_depth Tracks how many recursions we have gone through (to prevent infinite recursion)
+     * @param array $searchable_array A reference to everything we've found thus far. This is what we return.
+     * @param string $requested_searchable_path The current path that we've included so far, listed as colon-separated keys of relatedModels
+     * @return array The available searchable fields.
+     * @throws InvalidArgumentException
+     */
     public function getSearchableFields(BaseModel $model = null, $with_related = true, $current_depth = 1, &$searchable_array = array(), $requested_searchable_field = "*");
 
     /**
