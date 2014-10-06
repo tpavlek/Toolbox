@@ -89,36 +89,20 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         }
     }
 
-    public function testCreateSuccessfully() {
+    public function testPaginate() {
+        $this->createAndSeedDatabase();
         $repository = new BaseRepository($this->model, $this->validator);
-        $name = "Wow";
-        $description = "Such Description";
+        $pages = $repository->paginate();
+        $this->assertInstanceOf('Illuminate\Pagination\Paginator', $pages);
+        $this->assertEquals(3, $pages->count());
+        $this->assertEquals(2, $pages->getTotal());
+        $items = $pages->getCollection();
 
-        $this->validator->shouldReceive('validate');
-
-        $item = $repository->create([
-            'name' => $name,
-            'description' => $description
-        ]);
-
-        // We pull from the database and make sure the record exists, and matches.
-        $database_item = Item::find($item->id);
-        $this->assertEquals($name, $database_item->name);
-        $this->assertEquals($description, $database_item->description);
-    }
-
-    public function testCreateWithValidationErrors() {
-        $repository = new BaseRepository($this->model, $this->validator);
-
-        $this->validator->shouldReceive('validate')->andThrow('\Depotwarehouse\Toolbox\Exceptions\ValidationException');
-        try {
-            $repository->create([
-                'name' => "unique_mock",
-                "description" => "Mock"
-            ]);
-        } catch (\Depotwarehouse\Toolbox\Exceptions\ValidationException $exception) {
-            $count = Item::where('name', 'unique_mock')->count();
-            $this->assertEquals(0, $count, "There should not be any item in the database matching this name");
+        for ($i = 0; $i < 3; $i++) {
+            $item = $items->get($i);
+            $this->assertEquals($i + 1, $item->id);
+            $this->assertEquals($this->items[$i]['name'], $item->name);
+            $this->assertEquals($this->items[$i]['description'], $item->description);
         }
     }
 
@@ -157,21 +141,40 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         }
     }
 
-    public function testPaginate() {
-        $this->createAndSeedDatabase();
+    public function testCreateSuccessfully() {
         $repository = new BaseRepository($this->model, $this->validator);
-        $pages = $repository->paginate();
-        $this->assertInstanceOf('Illuminate\Pagination\Paginator', $pages);
-        $this->assertEquals(3, $pages->count());
-        $items = $pages->getCollection();
+        $name = "Wow";
+        $description = "Such Description";
 
-        for ($i = 0; $i < 3; $i++) {
-            $item = $items->get($i);
-            $this->assertEquals($i + 1, $item->id);
-            $this->assertEquals($this->items[$i]['name'], $item->name);
-            $this->assertEquals($this->items[$i]['description'], $item->description);
+        $this->validator->shouldReceive('validate');
+
+        $item = $repository->create([
+            'name' => $name,
+            'description' => $description
+        ]);
+
+        // We pull from the database and make sure the record exists, and matches.
+        $database_item = Item::find($item->id);
+        $this->assertEquals($name, $database_item->name);
+        $this->assertEquals($description, $database_item->description);
+    }
+
+    public function testCreateWithValidationErrors() {
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $this->validator->shouldReceive('validate')->andThrow('\Depotwarehouse\Toolbox\Exceptions\ValidationException');
+        try {
+            $repository->create([
+                'name' => "unique_mock",
+                "description" => "Mock"
+            ]);
+        } catch (\Depotwarehouse\Toolbox\Exceptions\ValidationException $exception) {
+            $count = Item::where('name', 'unique_mock')->count();
+            $this->assertEquals(0, $count, "There should not be any item in the database matching this name");
         }
     }
+
+
 
     /*public function testFilterWithoutArguments() {
         $this->fail("Unimplemented");

@@ -81,7 +81,7 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
     {
         $factory = new Factory();
         $all = $this->all();
-        $paginator = new Paginator($factory, $all->all(), $this->getConfiguration()->pagination["per_page"]);
+        $paginator = new Paginator($factory, $all->all(), $all->count(), $this->getConfiguration()->pagination["per_page"]);
         return $paginator;
     }
 
