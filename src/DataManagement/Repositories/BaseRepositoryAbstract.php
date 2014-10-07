@@ -125,6 +125,7 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
      * @param array $filters
      * @param callable $postFilter A callback function to be applied to the Builder before it is executed.
      * @return \Illuminate\Pagination\Paginator
+     * @throws InvalidArgumentException Thrown if a requested relationship does not exist on the model
      */
     public function filter($filters = array(), Callable $postFilter = null)
     {
@@ -137,7 +138,9 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
                 continue;
             }
 
-            $items->whereHas($operation->pullInclude(), $this->buildIncludeFilter($operation, $items));
+            $relationship_method = $this->model->getRelationshipName($operation->pullInclude());
+
+            $items->whereHas($relationship_method, $this->buildIncludeFilter($operation, $items));
         }
 
         if ($postFilter !== null) {

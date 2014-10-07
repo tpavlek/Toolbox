@@ -2,6 +2,7 @@
 
 namespace Depotwarehouse\Toolbox\DataManagement\EloquentModels;
 
+use Depotwarehouse\Toolbox\Exceptions\InvalidArgumentException;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -45,14 +46,15 @@ class BaseModel extends Model {
     /**
      * Array containing information about associated relationships.
      *
-     * The format of the array contains keys which relate to the function names of the relationships.
+     * The format of the array is such that keys represent related objects in the system, and the values represent the
+     * functions present in the class that are relationship methods to that object.
      * For example, if the class contains a method 'contacts' which is a relationship method to some Contact model
-     * then the relatedModels array would contain a link between 'contacts' and the fully qualified class name
-     * of the object that represents contacts. Eg.
+     * then the relatedModels array would contain a link between  the fully qualified class name
+     * of the object that represents contacts and 'contacts'. Eg.
      *
      * ```.language-php
      * [
-     *      'contacts' => '\Vendor\Package\Models\Contact'
+     *      'Vendor\Package\Models\Contact' => 'contacts'
      * ]
      * ```
      *
@@ -90,6 +92,25 @@ class BaseModel extends Model {
     public function setMeta(array $meta = array()) {
         $this->meta = $meta;
         $this->processMeta($meta);
+    }
+
+    /**
+     * Gets the name of the relationship method on the class that links to the given class.
+     *
+     * If the relationship name is passed in, and it exists in the relatedModels array, the relationship name will be returned.
+     * @param string $related_object Fully qualified class name, or the relationship name
+     * @return string The name of the relationship method on this class
+     * @throws InvalidArgumentException If the key is not found in the relatedModels array
+     */
+    public function getRelationshipName($related_object) {
+        if ( ! array_key_exists($related_object, $this->relatedModels)) {
+            if (in_array($related_object, $this->relatedModels)) {
+                return $related_object;
+            }
+            throw new InvalidArgumentException("The requested relationship: {$related_object} was not found");
+        }
+
+        return $this->relatedModels[$related_object];
     }
 
     /**

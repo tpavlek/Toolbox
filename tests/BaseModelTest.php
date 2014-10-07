@@ -71,6 +71,40 @@ class BaseModelTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testMetaOverriddenFromBaseClass() {
-        // TODO test meta is set properly when a base class overrides the property
+        $baseModel = new \Tests\Integration\Item();
+
+        $meta = [
+            'id' => [ BaseModel::GUARDED ],
+            'name' => [ BaseModel::FILLABLE, BaseModel::SEARCHABLE, BaseModel::UPDATEABLE ],
+            'description' => [ BaseModel::FILLABLE, BaseModel::UPDATEABLE, BaseModel::SEARCHABLE ],
+            'Tests\Integration\OtherItem:*' => [ BaseModel::SEARCHABLE ]
+        ];
+
+        $this->assertAttributeEquals($meta, 'meta', $baseModel);
+    }
+
+    public function testGetRelatedModels() {
+        $baseModel = new \Tests\Integration\Item();
+
+        $name = $baseModel->getRelationshipName('Tests\Integration\OtherItem');
+
+        $this->assertEquals('oitem', $name);
+    }
+
+    /**
+     * @expectedException \Depotwarehouse\Toolbox\Exceptions\InvalidArgumentException
+     * @expectedExceptionMessage The requested relationship: Tests\Integration\NotExistItem was not found
+     */
+    public function testGetRelatedModelsNotExist() {
+        $baseModel = new \Tests\Integration\Item();
+
+        $name = $baseModel->getRelationshipName('Tests\Integration\NotExistItem');
+    }
+
+    public function testGetRelatedModelsValueExist() {
+        $baseModel = new \Tests\Integration\Item();
+
+        $name = $baseModel->getRelationshipName('oitem');
+        $this->assertEquals('oitem', $name);
     }
 }

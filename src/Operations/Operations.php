@@ -25,13 +25,16 @@ class Operations {
         $value = array();
         $allowedValues = "[A-Za-z0-9]"; // The allowed characters in a value string
 
-        if (preg_match("/^([<>]((?={$allowedValues})|[^<>])|[=]((?={$allowedValues})|[^=<>]))/", $string, $operation)) {
-            if (preg_match("/{$allowedValues}+$/", $string, $value)) {
-                return [ 'op' => $operation[0], 'value' => $value[0] ];
-            }
-            throw new InvalidArgumentException("String must end with [A-Za-z0-9], given: " . $string);
+        // Try to regex out the operation, if we can't find one or it fails, then we'll set the operation to equals.
+        $foundOperation = preg_match("/^([<>]((?={$allowedValues})|[^<>])|[=]((?={$allowedValues})|[^=<>]))/", $string, $operation);
+        if (!$foundOperation) {
+            $operation[0] = "=";
         }
-        throw new InvalidArgumentException("String must start with [<>=], given: " . $string);
+
+        if (preg_match("/{$allowedValues}+$/", $string, $value)) {
+            return [ 'op' => $operation[0], 'value' => $value[0] ];
+        }
+        throw new InvalidArgumentException("String must end with [A-Za-z0-9], given: " . $string);
     }
 
     /**

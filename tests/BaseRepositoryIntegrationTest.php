@@ -13,6 +13,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
     /** @var  array  */
     protected $items;
 
+    protected $oitems;
+
     /** @var  Illuminate\Database\Capsule\Manager */
     protected $capsule;
 
@@ -34,12 +36,21 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
 
     private function createAndSeedDatabase() {
         // Perform the migration TODO move this somewhere else
+        $this->capsule->getConnection('default')->getSchemaBuilder()->dropIfExists('oitems');
         $this->capsule->getConnection('default')->getSchemaBuilder()->dropIfExists('items');
         $this->capsule->getConnection('default')->getSchemaBuilder()->create('items', function(\Illuminate\Database\Schema\Blueprint $table) {
             $table->increments('id');
             $table->string('name');
             $table->string('description');
             $table->timestamps();
+        });
+        $this->capsule->getConnection('default')->getSchemaBuilder()->create('oitems', function(\Illuminate\Database\Schema\Blueprint $table) {
+            $table->increments('id');
+            $table->integer('item_id')->unsigned();
+            $table->string('title');
+            $table->timestamps();
+
+            $table->foreign('item_id')->references('id')->on('items');
         });
 
         $this->capsule->bootEloquent();
@@ -50,9 +61,13 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
             [ 'name' => "Item Two", "description" => "Second Item"],
             [ 'name' => "Item Three", "description" => "Third Item"],
         ];
+        $this->oitems = [
+            [ 'item_id' => 1, 'title' => 'Other Item One' ]
+        ];
         Item::create($this->items[0]);
         Item::create($this->items[1]);
         Item::create($this->items[2]);
+        \Tests\Integration\OtherItem::create($this->oitems[0]);
     }
 
     public function tearDown() {
@@ -137,11 +152,36 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $repository = new BaseRepository($this->model, $this->validator);
 
         $pages = $repository->filter([
-            'name' => "=Two"
+            'name' => "two"
         ]);
         $this->assertInstanceOf('Illuminate\Pagination\Paginator', $pages);
-        var_dump($pages->offsetGet(0));
         $this->assertEquals(1, $pages->count());
+    }
+
+    public function testFilterWithRelationshipIncludeArgument() {
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $pages = $repository->filter([
+            'oitem:title' => 'One'
+        ]);
+        $this->assertInstanceOf('Illuminate\Pagination\Paginator', $pages);
+        $this->assertEquals(1, $pages->count());
+        $item = $pages->offsetGet(0);
+        $this->assertEquals(1, $item->id);
+        $this->assertEquals($this->items[0]["name"], $item->name);
+    }
+
+    public function testFilterWithClasspathIncludeArgument() {
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $pages = $repository->filter([
+            'Tests\Integration\OtherItem:title' => 'One'
+        ]);
+        $this->assertInstanceOf('Illuminate\Pagination\Paginator', $pages);
+        $this->assertEquals(1, $pages->count());
+        $item = $pages->offsetGet(0);
+        $this->assertEquals(1, $item->id);
+        $this->assertEquals($this->items[0]["name"], $item->name);
     }
 
     public function testFindSingleItem() {

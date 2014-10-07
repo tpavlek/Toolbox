@@ -2,25 +2,22 @@
 
 class OperationsTest extends PHPUnit_Framework_TestCase {
 
+
     public function testGetOpValuePairWithoutOperation() {
         $string = "9";
 
-        try {
-            \Depotwarehouse\Toolbox\Operations\Operations::getOpValuePair($string);
-            $this->fail("Exception should be thrown");
-        } catch (\Depotwarehouse\Toolbox\Exceptions\InvalidArgumentException $exception) {
-            $this->assertStringEndsWith($string, $exception->getMessage());
-        }
+        $pair = \Depotwarehouse\Toolbox\Operations\Operations::getOpValuePair($string);
+        $this->assertEquals(9, $pair['value']);
+        $this->assertEquals("=", $pair['op']);
     }
 
+    /**
+     * @expectedException \Depotwarehouse\Toolbox\Exceptions\InvalidArgumentException
+     * @expectedExceptionMessage String must end with [A-Za-z0-9], given: =
+     */
     public function testGetOpValuePairWithoutValue() {
         $string = "=";
-        try {
-            \Depotwarehouse\Toolbox\Operations\Operations::getOpValuePair($string);
-            $this->fail("Exception should be thrown");
-        } catch (\Depotwarehouse\Toolbox\Exceptions\InvalidArgumentException $exception) {
-            $this->assertStringEndsWith($string, $exception->getMessage());
-        }
+        \Depotwarehouse\Toolbox\Operations\Operations::getOpValuePair($string);
     }
 
     public function testGetOpValuePairValidOperations() {
@@ -35,14 +32,11 @@ class OperationsTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testGetOpValuePairInvalidOperations() {
-        $operations = [ "<>", "=>", "?<", "equals", "==", "" ];
+        $operations = [ "<>", "=>", "?<", "==", "" ];
         foreach ($operations as $operation) {
-            try {
-                $pair = \Depotwarehouse\Toolbox\Operations\Operations::getOpValuePair($operation . "9");
-                $this->fail("Exception should be thrown on operation: {$operation}");
-            } catch (\Depotwarehouse\Toolbox\Exceptions\InvalidArgumentException $exception) {
-                $this->assertStringEndsWith($operation . "9", $exception->getMessage());
-            }
+            $pair = \Depotwarehouse\Toolbox\Operations\Operations::getOpValuePair($operation . "9");
+            $this->assertEquals("=", $pair['op']);
+            $this->assertEquals(9, $pair['value']);
         }
     }
 
@@ -64,7 +58,7 @@ class OperationsTest extends PHPUnit_Framework_TestCase {
         $this->assertEmpty($operations);
 
         // test with multiple operations
-        $array = [ 'some_obj:mock_key' => '<9', 'other_key' => '=farts' ];
+        $array = [ 'some_obj:mock_key' => '<9', 'other_key' => '=farts'];
         $operations = \Depotwarehouse\Toolbox\Operations\Operations::getOperationsFromArrayOfFilters($array);
         $this->assertEquals(2, count($operations));
         $this->assertAttributeEquals([ 'some_obj'], 'include_path', $operations[0]);

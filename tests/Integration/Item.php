@@ -6,6 +6,10 @@ use Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel;
 
 class Item extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel {
 
+    public $relatedModels = [
+        'Tests\Integration\OtherItem' => 'oitem'
+    ];
+
     protected $meta = [
         'id' => [ self::GUARDED ],
         'name' => [ self::FILLABLE, self::SEARCHABLE, self::UPDATEABLE ],
@@ -17,11 +21,19 @@ class Item extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseMod
         parent::__construct($attributes);
     }
 
+    public function oitem() {
+        return $this->hasOne('Tests\Integration\OtherItem', 'item_id', 'id');
+    }
+
 }
 
 class OtherItem extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel {
 
+    public $table = "oitems";
+
     protected $meta = [
+        'id' => [ self::GUARDED ],
+        'item_id' => [ self::FILLABLE, self::UPDATEABLE ],
         'title' => [ self::FILLABLE, self::SEARCHABLE ],
         'Tests\Integration\ThirdItem:*' => [ self::SEARCHABLE ]
     ];
@@ -38,9 +50,11 @@ class ThirdItem extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\Ba
         'Tests\Integration\Item:*' => [ self::SEARCHABLE ],
     ];
 
-    public function __construct(array $attributes = array()) {
+    public function __construct(array $attributes = array())
+    {
         parent::__construct($attributes);
     }
+
 }
 
 class ItemUninstantiableRelated extends BaseModel {
