@@ -218,7 +218,12 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertEquals(1, $item->id);
     }
 
+    public function testSearchNoArgs() {
+        $repository = new BaseRepository($this->model, $this->validator);
 
+        $found = $repository->search([ ]);
+        $this->assertEquals(3, $found->count());
+    }
 
     public function testFindSingleItem() {
         $repository = new BaseRepository($this->model, $this->validator);
@@ -288,11 +293,9 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         }
     }
 
-
-
-    /*public function testFilterWithoutArguments() {
-        $this->fail("Unimplemented");
-    }*/
+    public function testUpdate() {
+        //TODO
+    }
 
     public function testGetSearchableFields() {
         $repository = new BaseRepository($this->model, $this->validator);
