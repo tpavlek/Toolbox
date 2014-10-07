@@ -150,16 +150,18 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
         return $this->handlePaginate($items->get());
     }
 
-    private function buildIncludeFilter(Operation $operation, Builder &$items)
+    private function buildIncludeFilter(Operation $operation, Builder &$items, BaseModel $model = null)
     {
+        $model = ($model == null) ? $this->model : $model;
         if (!$operation->hasIncludes()) {
-            return function ($query) use ($operation) {
+            return function (Builder $query) use ($operation) {
                 $query->where($operation->key, $operation->operation, $operation->value);
             };
         }
         // We currently have more items left in the include path, so we'll recurse
-        return function ($query) use ($operation, $items) {
-            $query->whereHas($operation->pullInclude(), $this->buildIncludeFilter($operation, $items));
+        return function (Builder $query) use ($operation, $items, $model) {
+            $relationship_method = $model->getRelationshipName($operation->pullInclude());
+            $query->whereHas($relationship_method, $this->buildIncludeFilter($operation, $items));
         };
     }
 
@@ -185,18 +187,32 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
             return $this->paginate();
         }
 
-        $searchable_fields = $this->getSearchableFields(false);
+        $searchable_fields = $this->getSearchableFields();
+        $search_args = [];
+        foreach ($searchable_fields as $searchable_field) {
+            foreach ($terms as $term) {
+                $search_args[$searchable_field] = $term;
+            }
+        }
+
+        $operations = Operations::getOperationsFromArrayOfFilters($search_args);
 
         $items = $this->model->newQuery();
-
-        foreach ($terms as $term) {
-            $items->where(function ($query) use ($searchable_fields, $term) {
-                foreach ($searchable_fields as $searchable_field) {
-                    $query->orWhere($searchable_field, 'LIKE', '%' . $term . '%');
+        $items->where(function (Builder $query) use ($operations) {
+            foreach ($operations as $operation) {
+                if ( ! $operation->hasIncludes()) {
+                    $query->orWhere($operation->key, $operation->operation, $operation->value);
+                    continue;
                 }
-            });
-        }
-        return $items->paginate(Config::get('pagination.per_page'));
+
+                $class = $operation->pullInclude();
+                $relationship_method = $this->model->getRelationshipName($class);
+
+                $query->orWhereHas($relationship_method, $this->buildIncludeFilter($operation, $query, new $class));
+            }
+        });
+
+        return $this->handlePaginate($items->get());
     }
 
     /**

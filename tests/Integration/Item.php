@@ -31,6 +31,10 @@ class OtherItem extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\Ba
 
     public $table = "oitems";
 
+    public $relatedModels = [
+        'Tests\Integration\ThirdItem' => 'titem'
+    ];
+
     protected $meta = [
         'id' => [ self::GUARDED ],
         'item_id' => [ self::FILLABLE, self::UPDATEABLE ],
@@ -41,11 +45,19 @@ class OtherItem extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\Ba
     public function __construct(array $attributes = array()) {
         parent::__construct($attributes);
     }
+
+    public function titem() {
+        return $this->hasOne('Tests\Integration\ThirdItem', 'oitem_id', 'id');
+    }
 }
 
 class ThirdItem extends \Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel {
 
+    public $table = "titems";
+
     protected $meta = [
+        'id' => [ self::GUARDED ],
+        'oitem_id' => [ self::FILLABLE, self::UPDATEABLE ],
         'slug' => [ self::FILLABLE, self::SEARCHABLE ],
         'Tests\Integration\Item:*' => [ self::SEARCHABLE ],
     ];

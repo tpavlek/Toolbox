@@ -14,6 +14,7 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
     protected $items;
 
     protected $oitems;
+    protected $titems;
 
     /** @var  Illuminate\Database\Capsule\Manager */
     protected $capsule;
@@ -36,6 +37,7 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
 
     private function createAndSeedDatabase() {
         // Perform the migration TODO move this somewhere else
+        $this->capsule->getConnection('default')->getSchemaBuilder()->dropIfExists('titems');
         $this->capsule->getConnection('default')->getSchemaBuilder()->dropIfExists('oitems');
         $this->capsule->getConnection('default')->getSchemaBuilder()->dropIfExists('items');
         $this->capsule->getConnection('default')->getSchemaBuilder()->create('items', function(\Illuminate\Database\Schema\Blueprint $table) {
@@ -52,6 +54,14 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
 
             $table->foreign('item_id')->references('id')->on('items');
         });
+        $this->capsule->getConnection('default')->getSchemaBuilder()->create('titems', function(\Illuminate\Database\Schema\Blueprint $table) {
+            $table->increments('id');
+            $table->integer('oitem_id')->unsigned();
+            $table->string('slug');
+            $table->timestamps();
+
+            $table->foreign('oitem_id')->references('id')->on('oitems');
+        });
 
         $this->capsule->bootEloquent();
 
@@ -64,10 +74,15 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->oitems = [
             [ 'item_id' => 1, 'title' => 'Other Item One' ]
         ];
+        $this->titems = [
+            [ 'oitem_id' => 1, 'slug' => 'Cool Item' ]
+        ];
+
         Item::create($this->items[0]);
         Item::create($this->items[1]);
         Item::create($this->items[2]);
         \Tests\Integration\OtherItem::create($this->oitems[0]);
+        \Tests\Integration\ThirdItem::create($this->titems[0]);
     }
 
     public function tearDown() {
@@ -183,6 +198,27 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertEquals(1, $item->id);
         $this->assertEquals($this->items[0]["name"], $item->name);
     }
+
+    public function testFilterWithTwoDepthIncludeArgument() {
+        // TODO
+    }
+
+    public function testFilterPostFilter() {
+        // TODO
+    }
+
+    public function testSearch() {
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $found = $repository->search([ "other" ]);
+
+        $this->assertEquals(1, $found->count());
+        $item = $found->offsetGet(0);
+        $this->assertInstanceOf('Tests\Integration\Item', $item);
+        $this->assertEquals(1, $item->id);
+    }
+
+
 
     public function testFindSingleItem() {
         $repository = new BaseRepository($this->model, $this->validator);
