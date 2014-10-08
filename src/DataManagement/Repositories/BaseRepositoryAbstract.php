@@ -21,10 +21,6 @@ use Illuminate\Support\Collection;
 
 abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
 {
-
-    const OBJECT_CREATED = 201;
-    const OBJECT_UPDATED = 202;
-
     /** @var BaseModel */
     protected $model;
 
@@ -70,6 +66,14 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
     private function getConfiguration() {
         $this->resolveConfiguration();
         return $this->configuration;
+    }
+
+    /**
+     * Sets the configuration of the repository.
+     * @param Configuration $configuration
+     */
+    public function setConfiguration(Configuration $configuration) {
+        $this->configuration = $configuration;
     }
 
     /**
@@ -261,37 +265,33 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
      * @param array $attributes the properties of the model to update as a key-value array
      * @return integer The status code of the outcome (either created or updated, as class constants)
      * @throws \Depotwarehouse\Toolbox\Exceptions\ValidationException
+     * @throws ModelNotFoundException
      * @throws \Exception
      */
     public function update($id, array $attributes = array())
     {
-        try {
-            $object = $this->find($id);
+        // Throws a ModelNotFoundException if the model does not exist
+        $object = $this->find($id);
 
-            $attributes = array_only($attributes, $this->getUpdateableFields());
+        $attributes = array_only($attributes, $this->getUpdateableFields());
 
-            try {
-                $this->validator->updateValidate($attributes);
-            } catch (ValidationException $ex) {
-                throw $ex;
-            }
+        // Throws a ValidationException if validation fails
+        $this->validator->updateValidate($attributes);
 
-            // todo catch exceptions here?
-            $object->update($attributes);
-            return self::OBJECT_UPDATED;
-
-        } catch (ModelNotFoundException $ex) {
-            $this->create(array_merge(['id' => $id], $attributes));
-            return self::OBJECT_CREATED;
-        }
-
-
+        $object->update($attributes);
     }
 
 
-    public function destroy($id)
+    /**
+     * Destroys a particular or set of models.
+     *
+     * Arguments are either a single integer ID or an array of integer IDs
+     * @param int[]|int $ids
+     * @return int The number of records deleted
+     */
+    public function destroy($ids)
     {
-        return $this->model->destroy($id);
+        return $this->model->destroy($ids);
     }
 
 

@@ -12,7 +12,6 @@ class BaseValidator implements BaseValidatorInterface {
      */
     public static function validate(array $input)
     {
-        // TODO: Implement validate() method.
     }
 
     /**
@@ -23,6 +22,5 @@ class BaseValidator implements BaseValidatorInterface {
      */
     public static function updateValidate(array $input)
     {
-        // TODO: Implement updateValidate() method.
     }
 }

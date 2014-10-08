@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Database\Eloquent\Builder;
 use Tests\Integration\Item;
 
 class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
@@ -103,6 +104,15 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertAttributeEquals($this->validator, 'validator', $repository);
     }
 
+    public function testSetConfiguration() {
+        $configuration = new \Depotwarehouse\Toolbox\DataManagement\Configuration();
+
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $repository->setConfiguration($configuration);
+        $this->assertAttributeEquals($configuration, 'configuration', $repository);
+    }
+
     public function testGetAll() {
         $this->createAndSeedDatabase();
 
@@ -199,12 +209,21 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertEquals($this->items[0]["name"], $item->name);
     }
 
-    public function testFilterWithTwoDepthIncludeArgument() {
-        // TODO
-    }
-
     public function testFilterPostFilter() {
-        // TODO
+        $this->createAndSeedDatabase();
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $postFilter = function(Builder $builder) {
+            $builder->where('name', 'like', '%two%');
+        };
+
+        // We test with no filters, so it's easy to check the result.
+        $pages = $repository->filter([], $postFilter);
+
+        $this->assertEquals(1, $pages->count());
+        $item = $pages->offsetGet(0);
+        $this->assertEquals(2, $item->id);
+        $this->assertEquals($this->items[1]['name'], $item->name);
     }
 
     public function testSearch() {
@@ -322,6 +341,59 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertEquals(0, $count, "There should not be any item in the database matching this name");
     }
 
+    /**
+     * @expectedException Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function testUpdateDoesNotExist() {
+        $this->createAndSeedDatabase();
+
+        $repository = new BaseRepository($this->model, $this->validator);
+        $name = 'Count Updateula';
+        $description = 'New Item';
+
+        $this->validator->shouldReceive('validate');
+        $repository->update(6, [ 'name' => $name, 'description' => $description ]);
+    }
+
+    /**
+     * @expectedException Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function testDestroy() {
+        $this->createAndSeedDatabase();
+
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $count = $repository->destroy(1);
+        $this->assertEquals(1, $count);
+
+        // Should not be able to find it now.
+        $repository->find(1);
+    }
+
+    public function testDestroyDoesNotExist() {
+        $this->createAndSeedDatabase();
+
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $count = $repository->destroy(17);
+        $this->assertEquals(0, $count);
+    }
+
+    /**
+     * @expectedException Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function testDestroySomeExist() {
+        $this->createAndSeedDatabase();
+
+        $repository = new BaseRepository($this->model, $this->validator);
+
+        $count = $repository->destroy([ 1, 17 ]);
+        $this->assertEquals(1, $count);
+
+        // Should not be able to find it.
+        $repository->find(1);
+    }
+
     public function testGetSearchableFields() {
         $repository = new BaseRepository($this->model, $this->validator);
 
@@ -341,6 +413,20 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertContains('description', $fields);
         $this->assertContains('Tests\Integration\OtherItem:title', $fields);
         $this->assertContains('Tests\Integration\OtherItem:Tests\Integration\ThirdItem:slug', $fields);
+    }
+
+    public function testGetSearchableFieldsStopsAtDepth() {
+        $repository = new BaseRepository($this->model, $this->validator);
+        $configuration = new \Depotwarehouse\Toolbox\DataManagement\Configuration();
+        $configuration->setInclude(1);
+        $repository->setConfiguration($configuration);
+
+        $fields = $repository->getSearchableFields(null, true);
+        $this->assertInternalType("array", $fields);
+        $this->assertEquals(3, count($fields));
+        $this->assertContains('name', $fields);
+        $this->assertContains('description', $fields);
+        $this->assertContains('Tests\Integration\OtherItem:title', $fields);
     }
 
 
