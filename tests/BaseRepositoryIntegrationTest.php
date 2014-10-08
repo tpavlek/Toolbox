@@ -294,7 +294,32 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
     }
 
     public function testUpdate() {
-        //TODO
+        $this->createAndSeedDatabase();
+
+        $repository = new BaseRepository($this->model, $this->validator);
+        $name = 'Count Updateula';
+
+        $this->validator->shouldReceive('updateValidate');
+        $repository->update(2, [ 'name' => $name ]);
+
+        $item = $repository->find(2);
+        $this->assertEquals($name, $item->name);
+    }
+
+    /**
+     * @expectedException \Depotwarehouse\Toolbox\Exceptions\ValidationException
+     */
+    public function testUpdateWithValidationErrors() {
+        $this->createAndSeedDatabase();
+
+        $repository = new BaseRepository($this->model, $this->validator);
+        $name = 'Count Updateula';
+
+        $this->validator->shouldReceive('updateValidate')->andThrow('\Depotwarehouse\Toolbox\Exceptions\ValidationException');
+        $repository->update(2, [ 'name' => $name ]);
+
+        $count = Item::where('name', $name)->count();
+        $this->assertEquals(0, $count, "There should not be any item in the database matching this name");
     }
 
     public function testGetSearchableFields() {
