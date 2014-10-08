@@ -266,7 +266,6 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
      * @return integer The status code of the outcome (either created or updated, as class constants)
      * @throws \Depotwarehouse\Toolbox\Exceptions\ValidationException
      * @throws ModelNotFoundException
-     * @throws \Exception
      */
     public function update($id, array $attributes = array())
     {
@@ -295,12 +294,17 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
     }
 
 
+    /**
+     * Returns the list of fields on the model that can be filled via Mass Assignment
+     * @return array The list of column names that can be filled
+     */
     public function getFillableFields()
     {
         return $this->model->fillable;
     }
 
     /**
+     * Gets the list of columns that are possible to be updated (eg. IDs may not be updateable, etc.)
      * @return array list of updateable fields on the model
      */
     public function getUpdateableFields()
