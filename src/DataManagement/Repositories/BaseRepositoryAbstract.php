@@ -275,7 +275,7 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
         $attributes = array_only($attributes, $this->getUpdateableFields());
 
         // Throws a ValidationException if validation fails
-        $this->validator->updateValidate($attributes);
+        $this->validator->updateValidate($attributes, $id);
 
         $object->update($attributes);
     }

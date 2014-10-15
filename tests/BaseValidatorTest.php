@@ -9,7 +9,7 @@ class BaseValidatorTest extends PHPUnit_Framework_TestCase {
 
     // Stub method.
     public function testUpdateValidate() {
-        \Depotwarehouse\Toolbox\DataManagement\Validators\BaseValidator::updateValidate([]);
+        \Depotwarehouse\Toolbox\DataManagement\Validators\BaseValidator::updateValidate([], 0);
 
     }
 

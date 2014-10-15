@@ -14,13 +14,14 @@ class BaseValidator implements BaseValidatorInterface {
     {
     }
 
+
     /**
      * Validates the input based on updating an existing object
      * @param array $input Key-value array of keys and their inputs
+     * @param mixed $current_id The ID of the current model being updated.
      * @return void
-     * @throws \Depotwarehouse\Toolbox\Exceptions\ValidationException
      */
-    public static function updateValidate(array $input)
+    public static function updateValidate(array $input, $current_id)
     {
     }
 }
