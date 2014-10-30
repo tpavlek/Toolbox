@@ -34,6 +34,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->model = new Item();
         $this->validator = Mockery::mock('\Depotwarehouse\Toolbox\DataManagement\Validators\BaseValidator');
         $this->configuration = new \Depotwarehouse\Toolbox\DataManagement\Configuration();
+        $this->configuration->setInclude(5);
+        $this->configuration->setPagination(2, "page");
     }
 
     private function createAndSeedDatabase() {
@@ -134,12 +136,13 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $repository = new BaseRepository($this->model, $this->validator);
         $pages = $repository->paginate();
         $this->assertInstanceOf('Illuminate\Pagination\Paginator', $pages);
-        $this->assertEquals(3, $pages->count(), "Number of items is {$pages->count()}");
+        $this->assertEquals(3, $pages->getTotal(), "Number of items total is {$pages->getTotal()}");
+        $this->assertEquals(2, $pages->count(), "Number of items on this page is {$pages->count()}");
         $this->assertEquals(2, $pages->getLastPage());
         $this->assertEquals(1, $pages->getCurrentPage());
         $items = $pages->getCollection();
 
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 0; $i < 2; $i++) {
             $item = $items->get($i);
             $this->assertEquals($i + 1, $item->id);
             $this->assertEquals($this->items[$i]['name'], $item->name);
@@ -153,6 +156,7 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
 
         $pages = $repository->paginate();
         $this->assertEquals(2, $pages->getCurrentPage());
+        unset($_GET["page"]);
     }
 
     public function testPaginateWithCurrentPageTooLarge() {
@@ -163,6 +167,7 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $last_page = $pages->getLastPage();
         $this->assertEquals(2, $last_page);
         $this->assertEquals($last_page, $pages->getCurrentPage());
+        unset($_GET["page"]);
     }
 
     public function testFilterWithNoArguments() {
@@ -170,7 +175,7 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
 
         $pages = $repository->filter();
         $this->assertInstanceOf('Illuminate\Pagination\Paginator', $pages);
-        $this->assertEquals(3, $pages->count());
+        $this->assertEquals(3, $pages->getTotal());
     }
 
     public function testFilterWithRegularArgument() {
@@ -180,7 +185,7 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
             'name' => "two"
         ]);
         $this->assertInstanceOf('Illuminate\Pagination\Paginator', $pages);
-        $this->assertEquals(1, $pages->count());
+        $this->assertEquals(1, $pages->getTotal());
     }
 
     public function testFilterWithRelationshipIncludeArgument() {
@@ -190,7 +195,7 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
             'oitem:title' => 'One'
         ]);
         $this->assertInstanceOf('Illuminate\Pagination\Paginator', $pages);
-        $this->assertEquals(1, $pages->count());
+        $this->assertEquals(1, $pages->getTotal());
         $item = $pages->offsetGet(0);
         $this->assertEquals(1, $item->id);
         $this->assertEquals($this->items[0]["name"], $item->name);
@@ -203,7 +208,7 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
             'Tests\Integration\OtherItem:title' => 'One'
         ]);
         $this->assertInstanceOf('Illuminate\Pagination\Paginator', $pages);
-        $this->assertEquals(1, $pages->count());
+        $this->assertEquals(1, $pages->getTotal());
         $item = $pages->offsetGet(0);
         $this->assertEquals(1, $item->id);
         $this->assertEquals($this->items[0]["name"], $item->name);
@@ -220,7 +225,7 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         // We test with no filters, so it's easy to check the result.
         $pages = $repository->filter([], $postFilter);
 
-        $this->assertEquals(1, $pages->count());
+        $this->assertEquals(1, $pages->getTotal());
         $item = $pages->offsetGet(0);
         $this->assertEquals(2, $item->id);
         $this->assertEquals($this->items[1]['name'], $item->name);
@@ -231,7 +236,7 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
 
         $found = $repository->search([ "other" ]);
 
-        $this->assertEquals(1, $found->count());
+        $this->assertEquals(1, $found->getTotal());
         $item = $found->offsetGet(0);
         $this->assertInstanceOf('Tests\Integration\Item', $item);
         $this->assertEquals(1, $item->id);
@@ -241,7 +246,7 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $repository = new BaseRepository($this->model, $this->validator);
 
         $found = $repository->search([ ]);
-        $this->assertEquals(3, $found->count());
+        $this->assertEquals(3, $found->getTotal());
     }
 
     public function testFindSingleItem() {

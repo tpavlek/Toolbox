@@ -91,23 +91,35 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
      */
     public function paginate()
     {
-        return $this->handlePaginate($this->all());
+        return $this->handlePaginate($this->model->newQuery());
     }
 
     /**
-     * Paginates a collection.
-     * @param Collection $items
+     * Paginates a query.
+     *
+     * Given an Eloquent Builder, we will construct the offsets and takes to paginate the data properly.
+     *
+     * @param Builder $builder
      * @return Paginator
      */
-    private function handlePaginate(Collection $items) {
+    private function handlePaginate(Builder $builder) {
+        $per_page = $this->getConfiguration()->pagination["per_page"];
+        $current_page = 1;
         $factory = new Factory($this->getConfiguration()->pagination["page_name"]);
         if (isset($_GET[$factory->getPageName()]) and $current_page = $_GET[$factory->getPageName()]) {
             $factory->setCurrentPage($current_page);
         } else {
             $factory->setCurrentPage(1);
         }
+        $count = $builder->count();
+        /** @var Builder $builder */
+        $builder = $builder->take($per_page)->skip($per_page * ($current_page - 1));
+        /** @var Collection $items */
+        $items = $builder->get();
 
-        $paginator = $factory->make($items->all(), $items->count(), $this->getConfiguration()->pagination["per_page"]);
+        $paginator = new Paginator($factory, $items->all(), $count, $per_page);
+        $paginator->setupPaginationContext();
+
         return $paginator;
     }
 
@@ -151,7 +163,7 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
             $postFilter($items);
         }
 
-        return $this->handlePaginate($items->get());
+        return $this->handlePaginate($items);
     }
 
     private function buildIncludeFilter(Operation $operation, Builder &$items, BaseModel $model = null)
@@ -216,7 +228,7 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
             }
         });
 
-        return $this->handlePaginate($items->get());
+        return $this->handlePaginate($items);
     }
 
     /**
