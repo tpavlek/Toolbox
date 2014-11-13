@@ -29,6 +29,12 @@ class BaseModelTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals($this->meta, PHPUnit_Framework_Assert::readAttribute($baseModel, 'meta'));
     }
 
+    public function test_it_can_get_meta() {
+        $baseModel = new BaseModel;
+        $baseModel->setMeta($this->meta);
+        $this->assertEquals($this->meta, $baseModel->getMeta());
+    }
+
     public function testProcessMeta() {
         $baseModel = new BaseModel;
         $baseModel->setMeta($this->meta);

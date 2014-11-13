@@ -95,6 +95,14 @@ class BaseModel extends Model {
     }
 
     /**
+     * Retrieve the raw meta array containing information about this class.
+     * @return array
+     */
+    public function getMeta() {
+        return $this->meta;
+    }
+
+    /**
      * Gets the name of the relationship method on the class that links to the given class.
      *
      * If the relationship name is passed in, and it exists in the relatedModels array, the relationship name will be returned.
