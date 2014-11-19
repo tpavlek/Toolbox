@@ -13,7 +13,7 @@ class OperationsTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Depotwarehouse\Toolbox\Exceptions\InvalidArgumentException
-     * @expectedExceptionMessage String must end with [A-Za-z0-9], given: =
+     * @expectedExceptionMessage String must end with [A-Za-z0-9.'], given: =
      */
     public function testGetOpValuePairWithoutValue() {
         $string = "=";
@@ -41,7 +41,7 @@ class OperationsTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testGetOpValuePairValidValueTypes() {
-        $values = [ 9, "12", "hunter2", "t3st" ];
+        $values = [ 9, "12", "hunter2", "t3st", "25.4", "O'Hare" ];
         foreach ($values as $value) {
             $pair = \Depotwarehouse\Toolbox\Operations\Operations::getOpValuePair('=' . $value);
             $this->assertArrayHasKey("op", $pair);
@@ -69,4 +69,3 @@ class OperationsTest extends PHPUnit_Framework_TestCase {
     }
 
 }
- 

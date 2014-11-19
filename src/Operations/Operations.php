@@ -23,7 +23,7 @@ class Operations {
     public static function getOpValuePair($string) {
         $operation = array();
         $value = array();
-        $allowedValues = "[A-Za-z0-9]"; // The allowed characters in a value string
+        $allowedValues = "[A-Za-z0-9.']"; // The allowed characters in a value string
 
         // Try to regex out the operation, if we can't find one or it fails, then we'll set the operation to equals.
         $foundOperation = preg_match("/^([<>]((?={$allowedValues})|[^<>])|[=]((?={$allowedValues})|[^=<>]))/", $string, $operation);
@@ -34,7 +34,7 @@ class Operations {
         if (preg_match("/{$allowedValues}+$/", $string, $value)) {
             return [ 'op' => $operation[0], 'value' => $value[0] ];
         }
-        throw new InvalidArgumentException("String must end with [A-Za-z0-9], given: " . $string);
+        throw new InvalidArgumentException("String must end with [A-Za-z0-9.'], given: " . $string);
     }
 
     /**
