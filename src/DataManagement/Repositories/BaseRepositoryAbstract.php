@@ -63,7 +63,8 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
      *
      * @return Configuration
      */
-    private function getConfiguration() {
+    private function getConfiguration()
+    {
         $this->resolveConfiguration();
         return $this->configuration;
     }
@@ -72,7 +73,8 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
      * Sets the configuration of the repository.
      * @param Configuration $configuration
      */
-    public function setConfiguration(Configuration $configuration) {
+    public function setConfiguration(Configuration $configuration)
+    {
         $this->configuration = $configuration;
     }
 
@@ -95,6 +97,24 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
     }
 
     /**
+     * Orders the result set by a specific column.
+     *
+     * @param $column
+     * @param bool $desc Should we sort in descending order?
+     * @return Paginator
+     */
+    public function orderBy($column, $desc = false) {
+        $query = $this->model
+            ->newQuery();
+        if ($desc) {
+            $query = $query->orderBy($column, 'DESC');
+        } else {
+            $query = $query->orderBy($column);
+        }
+        return $this->handlePaginate($query);
+    }
+
+    /**
      * Paginates a query.
      *
      * Given an Eloquent Builder, we will construct the offsets and takes to paginate the data properly.
@@ -102,7 +122,8 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
      * @param Builder $builder
      * @return Paginator
      */
-    private function handlePaginate(Builder $builder) {
+    private function handlePaginate(Builder $builder)
+    {
         $per_page = $this->getConfiguration()->pagination["per_page"];
         $current_page = 1;
         $factory = new Factory($this->getConfiguration()->pagination["page_name"]);
@@ -216,7 +237,7 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
         $items = $this->model->newQuery();
         $items->where(function (Builder $query) use ($operations) {
             foreach ($operations as $operation) {
-                if ( ! $operation->hasIncludes()) {
+                if (!$operation->hasIncludes()) {
                     $query->orWhere($operation->key, $operation->operation, $operation->value);
                     continue;
                 }

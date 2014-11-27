@@ -3,7 +3,8 @@
 use Illuminate\Database\Eloquent\Builder;
 use Tests\Integration\Item;
 
-class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
+class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase
+{
     /** @var  Depotwarehouse\Toolbox\DataManagement\EloquentModels\BaseModel */
     protected $model;
     /** @var  \Mockery\MockInterface */
@@ -11,7 +12,7 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
     /** @var  \Depotwarehouse\Toolbox\DataManagement\Configuration */
     protected $configuration;
 
-    /** @var  array  */
+    /** @var  array */
     protected $items;
 
     protected $oitems;
@@ -20,7 +21,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
     /** @var  Illuminate\Database\Capsule\Manager */
     protected $capsule;
 
-    public function setUp() {
+    public function setUp()
+    {
         $this->capsule = new Illuminate\Database\Capsule\Manager();
 
         $this->capsule->addConnection([
@@ -38,18 +40,19 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->configuration->setPagination(2, "page");
     }
 
-    private function createAndSeedDatabase() {
+    private function createAndSeedDatabase()
+    {
         // Perform the migration TODO move this somewhere else
         $this->capsule->getConnection('default')->getSchemaBuilder()->dropIfExists('titems');
         $this->capsule->getConnection('default')->getSchemaBuilder()->dropIfExists('oitems');
         $this->capsule->getConnection('default')->getSchemaBuilder()->dropIfExists('items');
-        $this->capsule->getConnection('default')->getSchemaBuilder()->create('items', function(\Illuminate\Database\Schema\Blueprint $table) {
+        $this->capsule->getConnection('default')->getSchemaBuilder()->create('items', function (\Illuminate\Database\Schema\Blueprint $table) {
             $table->increments('id');
             $table->string('name');
             $table->string('description');
             $table->timestamps();
         });
-        $this->capsule->getConnection('default')->getSchemaBuilder()->create('oitems', function(\Illuminate\Database\Schema\Blueprint $table) {
+        $this->capsule->getConnection('default')->getSchemaBuilder()->create('oitems', function (\Illuminate\Database\Schema\Blueprint $table) {
             $table->increments('id');
             $table->integer('item_id')->unsigned();
             $table->string('title');
@@ -57,7 +60,7 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
 
             $table->foreign('item_id')->references('id')->on('items');
         });
-        $this->capsule->getConnection('default')->getSchemaBuilder()->create('titems', function(\Illuminate\Database\Schema\Blueprint $table) {
+        $this->capsule->getConnection('default')->getSchemaBuilder()->create('titems', function (\Illuminate\Database\Schema\Blueprint $table) {
             $table->increments('id');
             $table->integer('oitem_id')->unsigned();
             $table->string('slug');
@@ -70,15 +73,15 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
 
         // Seed with some data
         $this->items = [
-            [ 'name' => "Item One", "description" => "First Item"],
-            [ 'name' => "Item Two", "description" => "Second Item"],
-            [ 'name' => "Item Three", "description" => "Third Item"],
+            ['name' => "Item One", "description" => "First Item"],
+            ['name' => "Item Two", "description" => "Second Item"],
+            ['name' => "Item Three", "description" => "Third Item"],
         ];
         $this->oitems = [
-            [ 'item_id' => 1, 'title' => 'Other Item One' ]
+            ['item_id' => 1, 'title' => 'Other Item One']
         ];
         $this->titems = [
-            [ 'oitem_id' => 1, 'slug' => 'Cool Item' ]
+            ['oitem_id' => 1, 'slug' => 'Cool Item']
         ];
 
         Item::create($this->items[0]);
@@ -88,7 +91,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         \Tests\Integration\ThirdItem::create($this->titems[0]);
     }
 
-    public function tearDown() {
+    public function tearDown()
+    {
         Mockery::close();
     }
 
@@ -106,7 +110,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertAttributeEquals($this->validator, 'validator', $repository);
     }
 
-    public function testSetConfiguration() {
+    public function testSetConfiguration()
+    {
         $configuration = new \Depotwarehouse\Toolbox\DataManagement\Configuration();
 
         $repository = new BaseRepository($this->model, $this->validator);
@@ -115,7 +120,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertAttributeEquals($configuration, 'configuration', $repository);
     }
 
-    public function testGetAll() {
+    public function testGetAll()
+    {
         $this->createAndSeedDatabase();
 
         $repository = new BaseRepository($this->model, $this->validator);
@@ -131,7 +137,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         }
     }
 
-    public function testPaginate() {
+    public function testPaginate()
+    {
         $this->createAndSeedDatabase();
         $repository = new BaseRepository($this->model, $this->validator);
         $pages = $repository->paginate();
@@ -150,7 +157,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         }
     }
 
-    public function testPaginateWithCurrentPageSet() {
+    public function testPaginateWithCurrentPageSet()
+    {
         $_GET["page"] = 2;
         $repository = new BaseRepository($this->model, $this->validator);
 
@@ -159,7 +167,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         unset($_GET["page"]);
     }
 
-    public function testPaginateWithCurrentPageTooLarge() {
+    public function testPaginateWithCurrentPageTooLarge()
+    {
         $_GET["page"] = 10;
         $repository = new BaseRepository($this->model, $this->validator);
 
@@ -170,7 +179,31 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         unset($_GET["page"]);
     }
 
-    public function testFilterWithNoArguments() {
+    public function test_it_can_order_by_a_column_descending()
+    {
+        $this->createAndSeedDatabase();
+
+        $repository = new BaseRepository($this->model, $this->validator);
+        $pages = $repository->orderBy('name', true);
+
+        $this->assertEquals("Item Two", $pages->offsetGet(0)->name);
+        $this->assertEquals("Item Three", $pages->offsetGet(1)->name);
+    }
+
+    public function test_it_can_order_by_a_column_ascending()
+    {
+        $this->createAndSeedDatabase();
+
+        $repository = new BaseRepository($this->model, $this->validator);
+        $pages = $repository->orderBy('name', false);
+
+        $this->assertEquals("Item One", $pages->offsetGet(0)->name);
+        $this->assertEquals("Item Three", $pages->offsetGet(1)->name);
+    }
+
+
+    public function testFilterWithNoArguments()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
 
         $pages = $repository->filter();
@@ -178,7 +211,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertEquals(3, $pages->getTotal());
     }
 
-    public function testFilterWithRegularArgument() {
+    public function testFilterWithRegularArgument()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
 
         $pages = $repository->filter([
@@ -188,7 +222,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertEquals(1, $pages->getTotal());
     }
 
-    public function testFilterWithRelationshipIncludeArgument() {
+    public function testFilterWithRelationshipIncludeArgument()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
 
         $pages = $repository->filter([
@@ -201,7 +236,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertEquals($this->items[0]["name"], $item->name);
     }
 
-    public function testFilterWithClasspathIncludeArgument() {
+    public function testFilterWithClasspathIncludeArgument()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
 
         $pages = $repository->filter([
@@ -214,11 +250,12 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertEquals($this->items[0]["name"], $item->name);
     }
 
-    public function testFilterPostFilter() {
+    public function testFilterPostFilter()
+    {
         $this->createAndSeedDatabase();
         $repository = new BaseRepository($this->model, $this->validator);
 
-        $postFilter = function(Builder $builder) {
+        $postFilter = function (Builder $builder) {
             $builder->where('name', 'like', '%two%');
         };
 
@@ -231,10 +268,11 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertEquals($this->items[1]['name'], $item->name);
     }
 
-    public function testSearch() {
+    public function testSearch()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
 
-        $found = $repository->search([ "other" ]);
+        $found = $repository->search(["other"]);
 
         $this->assertEquals(1, $found->getTotal());
         $item = $found->offsetGet(0);
@@ -242,14 +280,16 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertEquals(1, $item->id);
     }
 
-    public function testSearchNoArgs() {
+    public function testSearchNoArgs()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
 
-        $found = $repository->search([ ]);
+        $found = $repository->search([]);
         $this->assertEquals(3, $found->getTotal());
     }
 
-    public function testFindSingleItem() {
+    public function testFindSingleItem()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
 
         $item = $repository->find(1);
@@ -257,7 +297,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertEquals($this->items[0]['description'], $item->description);
     }
 
-    public function testFindMultipleItems() {
+    public function testFindMultipleItems()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
 
         $item = $repository->find("3,1");
@@ -272,7 +313,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertEquals($this->items[2]['description'], $item->last()->description);
     }
 
-    public function testFindItemDoesNotExist() {
+    public function testFindItemDoesNotExist()
+    {
         $this->createAndSeedDatabase();
         $repository = new BaseRepository($this->model, $this->validator);
 
@@ -284,7 +326,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         }
     }
 
-    public function testCreateSuccessfully() {
+    public function testCreateSuccessfully()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
         $name = "Wow";
         $description = "Such Description";
@@ -302,7 +345,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertEquals($description, $database_item->description);
     }
 
-    public function testCreateWithValidationErrors() {
+    public function testCreateWithValidationErrors()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
 
         $this->validator->shouldReceive('validate')->andThrow('\Depotwarehouse\Toolbox\Exceptions\ValidationException');
@@ -317,14 +361,15 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         }
     }
 
-    public function testUpdate() {
+    public function testUpdate()
+    {
         $this->createAndSeedDatabase();
 
         $repository = new BaseRepository($this->model, $this->validator);
         $name = 'Count Updateula';
 
         $this->validator->shouldReceive('updateValidate');
-        $repository->update(2, [ 'name' => $name ]);
+        $repository->update(2, ['name' => $name]);
 
         $item = $repository->find(2);
         $this->assertEquals($name, $item->name);
@@ -333,14 +378,15 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
     /**
      * @expectedException \Depotwarehouse\Toolbox\Exceptions\ValidationException
      */
-    public function testUpdateWithValidationErrors() {
+    public function testUpdateWithValidationErrors()
+    {
         $this->createAndSeedDatabase();
 
         $repository = new BaseRepository($this->model, $this->validator);
         $name = 'Count Updateula';
 
         $this->validator->shouldReceive('updateValidate')->andThrow('\Depotwarehouse\Toolbox\Exceptions\ValidationException');
-        $repository->update(2, [ 'name' => $name ]);
+        $repository->update(2, ['name' => $name]);
 
         $count = Item::where('name', $name)->count();
         $this->assertEquals(0, $count, "There should not be any item in the database matching this name");
@@ -349,7 +395,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
     /**
      * @expectedException Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    public function testUpdateDoesNotExist() {
+    public function testUpdateDoesNotExist()
+    {
         $this->createAndSeedDatabase();
 
         $repository = new BaseRepository($this->model, $this->validator);
@@ -357,13 +404,14 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $description = 'New Item';
 
         $this->validator->shouldReceive('validate');
-        $repository->update(6, [ 'name' => $name, 'description' => $description ]);
+        $repository->update(6, ['name' => $name, 'description' => $description]);
     }
 
     /**
      * @expectedException Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    public function testDestroy() {
+    public function testDestroy()
+    {
         $this->createAndSeedDatabase();
 
         $repository = new BaseRepository($this->model, $this->validator);
@@ -375,7 +423,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $repository->find(1);
     }
 
-    public function testDestroyDoesNotExist() {
+    public function testDestroyDoesNotExist()
+    {
         $this->createAndSeedDatabase();
 
         $repository = new BaseRepository($this->model, $this->validator);
@@ -387,19 +436,21 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
     /**
      * @expectedException Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    public function testDestroySomeExist() {
+    public function testDestroySomeExist()
+    {
         $this->createAndSeedDatabase();
 
         $repository = new BaseRepository($this->model, $this->validator);
 
-        $count = $repository->destroy([ 1, 17 ]);
+        $count = $repository->destroy([1, 17]);
         $this->assertEquals(1, $count);
 
         // Should not be able to find it.
         $repository->find(1);
     }
 
-    public function testGetSearchableFields() {
+    public function testGetSearchableFields()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
 
         // Test without related models
@@ -420,7 +471,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertContains('Tests\Integration\OtherItem:Tests\Integration\ThirdItem:slug', $fields);
     }
 
-    public function testGetSearchableFieldsStopsAtDepth() {
+    public function testGetSearchableFieldsStopsAtDepth()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
         $configuration = new \Depotwarehouse\Toolbox\DataManagement\Configuration();
         $configuration->setInclude(1);
@@ -439,7 +491,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
      * @expectedException \Depotwarehouse\Toolbox\Exceptions\InvalidArgumentException
      * @expectedExceptionMessage The requested class: Tests\Integration\ItemInterface is not instantiable
      */
-    public function testGetSearchableFieldsWithUninstantiableRelatedModel() {
+    public function testGetSearchableFieldsWithUninstantiableRelatedModel()
+    {
         $model = new \Tests\Integration\ItemUninstantiableRelated();
         $repository = new BaseRepository($model, $this->validator);
 
@@ -451,14 +504,16 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
      * @expectedException \Depotwarehouse\Toolbox\Exceptions\InvalidArgumentException
      * @expectedExceptionMessage The requested class: Tests\Integration\NotFoundClass does not exist
      */
-    public function testGetSearchableFieldsWithInvalidRelatedModel() {
+    public function testGetSearchableFieldsWithInvalidRelatedModel()
+    {
         $model = new \Tests\Integration\ItemNotFoundRelated();
         $repository = new BaseRepository($model, $this->validator);
 
         $fields = $repository->getSearchableFields();
     }
 
-    public function testGetUpdateable() {
+    public function testGetUpdateable()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
 
         $updateable = $repository->getUpdateableFields();
@@ -467,7 +522,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
         $this->assertContains("description", $updateable);
     }
 
-    public function testGetFillable() {
+    public function testGetFillable()
+    {
         $repository = new BaseRepository($this->model, $this->validator);
 
         $fillable = $repository->getUpdateableFields();
@@ -477,7 +533,8 @@ class BaseRepositoryIntegrationTest extends PHPUnit_Framework_TestCase{
     }
 }
 
-class BaseRepository extends \Depotwarehouse\Toolbox\DataManagement\Repositories\BaseRepositoryAbstract {
+class BaseRepository extends \Depotwarehouse\Toolbox\DataManagement\Repositories\BaseRepositoryAbstract
+{
     /**
      * Resolves the configuration object of the class.
      *

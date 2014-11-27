@@ -35,6 +35,15 @@ interface BaseRepositoryInterface {
     public function paginate();
 
     /**
+     * Orders the result set by a specific column.
+     *
+     * @param $column
+     * @param bool $desc Should we sort in descending order?
+     * @return \Illuminate\Pagination\Paginator
+     */
+    public function orderBy($column, $desc = false);
+
+    /**
      * Filters a list of items based on passed filters.
      *
      * The acceptable filters are anything parseable by the Operation class. The usage of this function should be
