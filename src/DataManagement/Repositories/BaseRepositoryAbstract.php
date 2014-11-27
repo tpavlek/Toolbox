@@ -80,7 +80,7 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
 
     /**
      * Returns all instances of the model
-     * @return \Illuminate\Database\Eloquent\Collection|static[]
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public function all()
     {
@@ -255,7 +255,7 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
     /**
      * Finds specific instances a model by ID(s)
      * @param $id string|int  Either an integer ID or a comma separated string of IDs.
-     * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Support\Collection|static
+     * @return BaseModel|\Illuminate\Support\Collection
      * @throws ModelNotFoundException
      */
     public function find($id)
@@ -275,7 +275,7 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
     /**
      * Creates a new instance of the model based on the array of attributes passed in
      * @param array $attributes
-     * @return \Illuminate\Database\Eloquent\Model|static
+     * @return BaseModel
      * @throws \Depotwarehouse\Toolbox\Exceptions\ValidationException
      */
     public function create(array $attributes)
@@ -296,7 +296,7 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
      * If no attributes are passed in the model will be "touched" (updated_at set to now).
      * @param mixed $id unique identifier of the model
      * @param array $attributes the properties of the model to update as a key-value array
-     * @return integer The status code of the outcome (either created or updated, as class constants)
+     * @return BaseModel
      * @throws \Depotwarehouse\Toolbox\Exceptions\ValidationException
      * @throws ModelNotFoundException
      */
@@ -310,7 +310,7 @@ abstract class BaseRepositoryAbstract implements BaseRepositoryInterface
         // Throws a ValidationException if validation fails
         $this->validator->updateValidate($attributes, $id);
 
-        $object->update($attributes);
+        return $object->update($attributes);
     }
 
 
