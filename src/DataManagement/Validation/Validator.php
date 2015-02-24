@@ -1,18 +1,17 @@
 <?php
 
-namespace Depotwarehouse\Toolbox\DataManagement\Validators;
+namespace Depotwarehouse\Toolbox\DataManagement\Validation;
 
-class BaseValidator implements BaseValidatorInterface {
+interface Validator
+{
 
     /**
      * Validates the input based on creating a new object
      * @param array $input Key-value array of keys and their inputs
      * @return void
-     * @throws \Depotwarehouse\Toolbox\Exceptions\ValidationException
+     * @throws \Depotwarehouse\Toolbox\DataManagement\Validation\ValidationException
      */
-    public static function validate(array $input)
-    {
-    }
+    public static function validate(array $input);
 
 
     /**
@@ -21,7 +20,5 @@ class BaseValidator implements BaseValidatorInterface {
      * @param mixed $current_id The ID of the current model being updated.
      * @return void
      */
-    public static function updateValidate(array $input, $current_id)
-    {
-    }
-}
+    public static function updateValidate(array $input, $current_id);
+} 

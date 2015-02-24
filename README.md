@@ -4,3 +4,5 @@
 [![Coverage Status](https://coveralls.io/repos/tpavlek/Toolbox/badge.png?branch=master)](https://coveralls.io/r/tpavlek/Toolbox?branch=master)
 
 A standard library of tool functions used across many projects
+
+TODO documentation.
