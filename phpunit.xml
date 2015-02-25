@@ -18,4 +18,14 @@
     <logging>
         <log type="coverage-clover" target="build/logs/clover.xml"/>
     </logging>
+
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">src/</directory>
+            <exclude>
+                <file>src/DataManagement/Repositories/ActiveRepository.php</file>
+                <file>src/DataManagement/Validation/Validator.php</file>
+            </exclude>
+        </whitelist>
+    </filter>
 </phpunit>
