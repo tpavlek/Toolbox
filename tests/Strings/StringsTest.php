@@ -21,4 +21,16 @@ class StringsTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(20, strlen($string));
     }
 
+    public function test_it_identifies_strings_starting_with_needle()
+    {
+        $this->assertTrue(Strings\starts_with("mock", "mo"));
+        $this->assertFalse(Strings\starts_with("mock", "bu"));
+    }
+
+    public function test_it_identifies_strings_ending_with_needle()
+    {
+        $this->assertTrue(Strings\ends_with("mock", "ck"));
+        $this->assertFalse(Strings\ends_with("mock", "bu"));
+    }
+
 }

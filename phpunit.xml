@@ -25,6 +25,8 @@
             <exclude>
                 <file>src/DataManagement/Repositories/ActiveRepository.php</file>
                 <file>src/DataManagement/Validation/Validator.php</file>
+                <file>src/DataManagement/Validation/NullValidator.php</file>
+                <file>src/FrameworkIntegration/Laravel/ToolboxServiceProvider.php</file>
             </exclude>
         </whitelist>
     </filter>
