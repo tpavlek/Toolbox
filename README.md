@@ -9,7 +9,7 @@ This is a standard library of tools that abstracts common work needed to be done
 Database Management
 --------------------
 
-There are a couple of classes that make working with databases easier in Laravel projects. The repository pattern
+There are a couple of classes that make working with databases easier in projects. This is designed for use with Laravel, as they expose Eloquent models, however Laravel is not strictly necessary. The repository pattern
 allows for greater testability and easier to understand controllers. In your projects, simply create repositories that
 extend from `ActiveRepositoryAbstract`. For typehints you can use the contract `ActiveRepository`.
 
@@ -29,4 +29,26 @@ class MyActiveRepository extends ActiveRepositoryAbstract
 }
 ```
 
+Validators are simple to implement. They were designed with Laravel validators in mind. They exceptions they throw, `ValidationException`s, can be passed a failing Laravel Validator to construct an instance.
+
+To implement a validator, simply make a class that implements the `Validator` interface. The two methods should do nothing if validation passes and throw a `ValidationException` if an error occurs.
+
+Strings
+--------
+
+Commonly projects have string related needs that aren't easily filled by the PHP standard library.
+
+`Strings\generateRandomString($length = 40)`
+This generates a random (pseudorandom, do *not* use this for cryptographic or security purposes) string of the given length. The convenient usage for this is generate noninteger keys for a database table.
+
+`Strings\starts_with($haystack, $needle)`
+
+`Strings\ends_with($haystack, $needle)`
+
+Testing
+--------
+
+```
+phpunit
+```
 
