@@ -2,12 +2,14 @@
 
 namespace Depotwarehouse\Toolbox\FrameworkIntegration\Laravel;
 
+use Depotwarehouse\Toolbox\FrameworkIntegration\Laravel\ViewComposers\ErrorPartialComposer;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Contracts\View\Factory;
 
 class ErrorPartialServiceProvider extends ServiceProvider
 {
 
-    public function boot()
+    public function boot(Factory $view)
     {
 
         $this->loadViewsFrom(__DIR__ . '/Views', 'toolbox');
@@ -15,6 +17,9 @@ class ErrorPartialServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/Views' => base_path('resources/views/vendor/toolbox')
         ]);
+
+        // We need to register our view composer for errorPartial to properly set all variables
+        $view->composer('vendor.toolbox.errors.errorPartial', ErrorPartialComposer::class);
     }
 
     /**
@@ -24,6 +29,5 @@ class ErrorPartialServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        // TODO: Implement register() method.
     }
 }
