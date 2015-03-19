@@ -3,7 +3,6 @@
 namespace Depotwarehouse\Toolbox\DataManagement\Validation;
 
 use Exception;
-use Illuminate\Validation\Validator;
 
 class ValidationException extends Exception
 {
@@ -12,11 +11,11 @@ class ValidationException extends Exception
     private $errors;
 
     /**
-     * @param string|Validator $container
+     * @param string|\Illuminate\Validation\Validator $container
      */
     public function __construct($container)
     {
-        $this->errors = ($container instanceof Validator) ? $container->errors() : $container;
+        $this->errors = ($container instanceof \Illuminate\Validation\Validator) ? $container->errors() : $container;
         parent::__construct(null);
     }
 
