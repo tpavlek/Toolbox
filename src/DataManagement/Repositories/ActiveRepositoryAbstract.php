@@ -33,6 +33,15 @@ class ActiveRepositoryAbstract implements ActiveRepository
     }
 
     /**
+     * Paginate the results of the model.
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function paginate()
+    {
+        return $this->model->paginate();
+    }
+
+    /**
      * Finds specific instances a model by it's primary key.
      *
      * @param  $id string|int
