@@ -2,7 +2,7 @@
 
 namespace Depotwarehouse\Toolbox\DataManagement\Repositories;
 
-use Depotwarehouse\Toolbox\DataManagement\Validators\Validator;
+use Depotwarehouse\Toolbox\DataManagement\Validation\Validator;
 use Illuminate\Database\Eloquent\Model;
 
 class ActiveRepositoryAbstract implements ActiveRepository
