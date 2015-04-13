@@ -34,7 +34,7 @@ interface ActiveRepository
      *
      * @param array $attributes
      * @return \Illuminate\Database\Eloquent\Model
-     * @throws \Depotwarehouse\Toolbox\DataManagement\Validators\ValidationException
+     * @throws \Depotwarehouse\Toolbox\DataManagement\Validation\ValidationException
      */
     public function create(array $attributes);
 
@@ -49,7 +49,7 @@ interface ActiveRepository
      * @param  string|int  $id           A unique identifier of the model
      * @param  array       $attributes   The properties of the model to update as a key-value array
      * @return \Illuminate\Database\Eloquent\Model
-     * @throws \Depotwarehouse\Toolbox\DataManagement\Validators\ValidationException
+     * @throws \Depotwarehouse\Toolbox\DataManagement\Validation\ValidationException
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
     public function update($id, array $attributes = array());
