@@ -22,10 +22,11 @@
         "psr-4": {
             "Depotwarehouse\\Toolbox\\": "src/"
         },
-      "files": [
-        "src/Strings/Strings.php",
-        "src/Verification/Verification.php"
-      ]
+        "files": [
+            "src/Strings/Strings.php",
+            "src/Verification/Verification.php",
+            "src/Operations/Operations.php"
+        ]
     },
     "minimum-stability": "stable"
 }
