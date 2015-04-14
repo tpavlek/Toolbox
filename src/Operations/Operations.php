@@ -57,7 +57,7 @@ function get_op_value_pair($string)
  * @return Operation[]
  * @throws InvalidArgumentException
  */
-function get_operations_from_array_of_fitlers(array $filters)
+function get_operations_from_array_of_filters(array $filters)
 {
     $operations = [ ];
 

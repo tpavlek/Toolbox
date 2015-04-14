@@ -68,12 +68,12 @@ class OperationsTest extends \PHPUnit_Framework_TestCase {
     public function testGetOperationsFromArrayOfFilters() {
         // Test with an empty array
         $array = [];
-        $operations = \Depotwarehouse\Toolbox\Operations\get_operations_from_array_of_fitlers($array);
+        $operations = \Depotwarehouse\Toolbox\Operations\get_operations_from_array_of_filters($array);
         $this->assertEmpty($operations);
 
         // test with multiple operations
         $array = [ 'some_obj:mock_key' => '<9', 'other_key' => '=farts'];
-        $operations = \Depotwarehouse\Toolbox\Operations\get_operations_from_array_of_fitlers($array);
+        $operations = \Depotwarehouse\Toolbox\Operations\get_operations_from_array_of_filters($array);
         $this->assertEquals(2, count($operations));
         $this->assertAttributeEquals([ 'some_obj'], 'include_path', $operations[0]);
         $this->assertAttributeEquals('mock_key', 'key', $operations[0]);
