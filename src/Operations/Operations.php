@@ -2,7 +2,6 @@
 
 namespace Depotwarehouse\Toolbox\Operations;
 
-use Depotwarehouse\Toolbox\Operations\Operation;
 use InvalidArgumentException;
 
 /**
