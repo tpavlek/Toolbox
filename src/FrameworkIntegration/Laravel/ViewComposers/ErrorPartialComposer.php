@@ -22,7 +22,7 @@ class ErrorPartialComposer extends Composer
         $warn = ($errors->has('warn')) ? $errors->get('warn') : [ ];
         $errors_arr = ($errors->has('errors')) ? $errors->get('errors') : [ ];
         // if there's anything else with a different key in the messagebag, we'll treat it as an error.
-        $arr = $errors->all();
+        $arr = $errors->toArray();
         unset($arr['success']);
         unset($arr['warn']);
         unset($arr['errors']);
