@@ -28,5 +28,10 @@
             "src/Operations/Operations.php"
         ]
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Depotwarehouse\\Toolbox\\Tests\\": "tests/"
+        }
+    },
     "minimum-stability": "stable"
 }
