@@ -45,6 +45,32 @@ This generates a random (pseudorandom, do *not* use this for cryptographic or se
 
 `Strings\ends_with($haystack, $needle)`
 
+Laravel Integration
+---------------------
+
+### Errors Partial
+
+This project ships with an Error Partial that displays errors, warnings and success messages at the top of the application
+page, based on a consistent format. To Install the Error Partial Handler in a Laravel application, add
+
+```php
+Depotwarehouse\Toolbox\FrameworkIntegration\Laravel\ErrorPartialServiceProvider::class
+```
+
+to your `config/app.php` in the providers array. Next, you'll need to publish the view file with:
+
+```
+php artisan vendor:publish
+```
+
+Now in your layout page, where you want the errors to appear (likely at the top), simply add
+
+```php
+@include('vendor.toolbox.errors.errorPartial')
+```
+
+Now errors, warnings and success messages will consistently render!
+
 Testing
 --------
 
