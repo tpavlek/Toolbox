@@ -21,7 +21,7 @@ class ToolboxServiceProvider extends ServiceProvider
         Validator::extend(
             'alpha_num_hyphen',
             function($attribute, $value) {
-                return preg_match('/^[A-Za-z-]+', $value);
+                return preg_match('/^[A-Za-z-]+/', $value);
             },
             ":attribute must only have alphanumeric characters and hyphens"
         );
