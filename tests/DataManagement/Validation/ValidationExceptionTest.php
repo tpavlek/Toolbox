@@ -2,6 +2,7 @@
 
 namespace Depotwarehouse\Toolbox\Tests\Validation;
 
+use Depotwarehouse\Toolbox\DataManagement\Validation\ValidationException;
 use Illuminate\Validation\Validator;
 use Illuminate\Support\MessageBag;
 use Mockery as m;
@@ -20,27 +21,38 @@ class ValidationExceptionTest extends PHPUnit_Framework_TestCase
         m::close();
     }
 
-    public function testConstructor()
+    /**
+     * @test
+     */
+    public function it_can_construct_from_a_validator()
     {
         $mock_validator = m::mock(Validator::class);
-        $mock_messagebag = m::mock(MessageBag::class);
-
+        $errorBag = new MessageBag([
+            'errors' => 'Some validation error occurred'
+        ]);
+        $input_data = [ 'id' => "1234", 'name' => 'Fred' ];
         $mock_validator->shouldReceive('errors')
-            ->andReturn($mock_messagebag);
+            ->andReturn($errorBag);
+        $mock_validator->shouldReceive('getData')
+            ->andReturn($input_data);
 
-        $exception = new \Depotwarehouse\Toolbox\DataManagement\Validation\ValidationException($mock_validator);
-        $this->assertAttributeEquals($mock_messagebag, "errors", $exception);
+        $exception = ValidationException::fromValidator($mock_validator);
 
-        $exception = new \Depotwarehouse\Toolbox\DataManagement\Validation\ValidationException($mock_messagebag);
-        $this->assertAttributeEquals($mock_messagebag, "errors", $exception);
+        $this->assertEquals($errorBag, $exception->get());
+        $this->assertEquals($input_data, $exception->inputData());
     }
 
-    public function testGet()
+    /**
+     * @test
+     */
+    public function it_can_construct_from_a_messagebag()
     {
-        $mock_messagebag = m::mock(MessageBag::class);
-        $exception = new \Depotwarehouse\Toolbox\DataManagement\Validation\ValidationException($mock_messagebag);
+        $errorBag = new MessageBag([ 'errors' => 'some validation error occurred' ]);
 
-        $this->assertEquals($mock_messagebag, $exception->get());
+        $exception = ValidationException::fromMessageBag($errorBag);
+
+        $this->assertEquals($errorBag, $exception->errors);
     }
+
 
 }

@@ -3,20 +3,21 @@
 namespace Depotwarehouse\Toolbox\DataManagement\Validation;
 
 use Exception;
+use Illuminate\Support\MessageBag;
+use Illuminate\Validation\Validator;
 
 class ValidationException extends Exception
 {
 
     /** @var \Illuminate\Support\MessageBag */
-    private $errors;
+    public $errors;
 
-    /**
-     * @param string|\Illuminate\Validation\Validator $container
-     */
-    public function __construct($container)
+    public $input_data;
+
+    public function __construct(MessageBag $errors, array $inputData = [ ])
     {
-        $this->errors = ($container instanceof \Illuminate\Validation\Validator) ? $container->errors() : $container;
-        parent::__construct(null);
+        $this->errors = $errors;
+        $this->input_data = $inputData;
     }
 
     /**
@@ -26,4 +27,19 @@ class ValidationException extends Exception
     {
         return $this->errors;
     }
-} 
+
+    public function inputData()
+    {
+        return $this->input_data;
+    }
+
+    public static function fromValidator(Validator $validator)
+    {
+        return new self($validator->errors(), $validator->getData());
+    }
+
+    public static function fromMessageBag(MessageBag $errors, array $inputData = [])
+    {
+        return new self($errors, $inputData);
+    }
+}
