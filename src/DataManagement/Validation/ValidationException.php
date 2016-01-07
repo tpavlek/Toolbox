@@ -18,6 +18,9 @@ class ValidationException extends Exception
     {
         $this->errors = $errors;
         $this->input_data = $inputData;
+
+        $message = "Validation failed in the following ways: " . implode(',', $this->errors->getMessages());
+        parent::__construct($message);
     }
 
     /**
