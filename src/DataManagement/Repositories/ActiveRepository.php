@@ -63,5 +63,10 @@ interface ActiveRepository
      */
     public function destroy($ids);
 
+    /**
+     * Get fillable fields for model
+     * @return array
+     */
+    public function getFillableFields();
 
 }
