@@ -103,4 +103,13 @@ class ActiveRepositoryAbstract implements ActiveRepository
         $this->model->destroy($ids);
     }
 
+    /**
+     * Get fillable fields for model
+     * @return array
+     */
+    public function getFillableFields()
+    {
+        return $this->model->getFillable();
+    }
+
 }
