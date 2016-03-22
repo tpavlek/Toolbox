@@ -32,7 +32,20 @@ class Operation
     {
         $this->computeIncludePath($path);
         $this->operation = (is_string($value) && $operation == "=") ? "LIKE" : $operation;
-        $this->value = (is_string($value)) ? "%{$value}%" : $value;
+        $this->value = $value;
+    }
+
+
+    /**
+     * Add partial matching to the Operation, i.e. if the value is a string add %wildcards%
+     *
+     * @return Operation
+     */
+    public function matchPartial()
+    {
+        $newOperation = clone $this;
+        $newOperation->value = (is_string($this->value)) ? "%{$this->value}%" : $this->value;
+        return $newOperation;
     }
 
     /**

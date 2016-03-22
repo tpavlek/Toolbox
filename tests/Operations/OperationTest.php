@@ -34,6 +34,15 @@ class OperationTest extends \PHPUnit_Framework_TestCase {
         $path = "mock_key";
         $operation_obj = new \Depotwarehouse\Toolbox\Operations\Operation($path, $this->operation, $this->value);
         $this->assertAttributeEquals('LIKE', 'operation', $operation_obj);
+        $this->assertAttributeEquals("{$this->value}", 'value', $operation_obj);
+    }
+
+
+    public function testPartialMatchingString() {
+        $path = "mock_key";
+        $operation_obj = new \Depotwarehouse\Toolbox\Operations\Operation($path, $this->operation, $this->value);
+        $operation_obj = $operation_obj->matchPartial();
+        $this->assertAttributeEquals('LIKE', 'operation', $operation_obj);
         $this->assertAttributeEquals("%{$this->value}%", 'value', $operation_obj);
     }
 
