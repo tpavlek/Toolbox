@@ -66,7 +66,7 @@ class OperationsTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testGetOperationsFromArrayOfFilters() {
-        // Test with an empty array
+        // CombinationsTest with an empty array
         $array = [];
         $operations = \Depotwarehouse\Toolbox\Operations\get_operations_from_array_of_filters($array);
         $this->assertEmpty($operations);

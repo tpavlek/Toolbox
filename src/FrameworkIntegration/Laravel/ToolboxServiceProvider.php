@@ -2,6 +2,7 @@
 
 namespace Depotwarehouse\Toolbox\FrameworkIntegration\Laravel;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 use Validator;
 
@@ -26,11 +27,25 @@ class ToolboxServiceProvider extends ServiceProvider
             ":attribute must only have alphanumeric characters and hyphens"
         );
 
+        $this->registerCollectionMacros();
+    }
+
+    public static function registerCollectionMacros()
+    {
         Collection::macro('toAssoc', function () {
             return $this->reduce(function ($items, $pair) {
                 list($key, $value) = $pair;
                 return $items->put($key, $value);
             }, new static);
+        });
+
+        Collection::macro('combinations', function($combineWith) {
+            return $this->reduce(function ($combinations, $originalItem) use ($combineWith) {
+                return $combinations->push($combineWith->map(function ($otherItem) use ($originalItem) {
+                    return [ $originalItem, $otherItem ];
+                }));
+            }, new static)
+                ->flatten(1);
         });
     }
 
