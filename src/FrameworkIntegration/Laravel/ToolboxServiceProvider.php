@@ -25,6 +25,13 @@ class ToolboxServiceProvider extends ServiceProvider
             },
             ":attribute must only have alphanumeric characters and hyphens"
         );
+
+        Collection::macro('toAssoc', function () {
+            return $this->reduce(function ($items, $pair) {
+                list($key, $value) = $pair;
+                return $items->put($key, $value);
+            }, new static);
+        });
     }
 
     /**
