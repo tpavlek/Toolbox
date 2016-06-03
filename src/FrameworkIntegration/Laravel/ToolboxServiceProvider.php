@@ -47,6 +47,10 @@ class ToolboxServiceProvider extends ServiceProvider
             }, new static)
                 ->flatten(1);
         });
+
+        Collection::macro('pipe', function ($callback) {
+            return $callback($this);
+        });
     }
 
     /**
