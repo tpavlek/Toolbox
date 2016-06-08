@@ -51,6 +51,14 @@ class ToolboxServiceProvider extends ServiceProvider
         Collection::macro('pipe', function ($callback) {
             return $callback($this);
         });
+
+        Collection::macro('head', function($headCallback, $tailCallback = null) {
+            if ($tailCallback === null) {
+                $tailCallback = function($arg) { return $arg; };
+            }
+
+            return $this->slice(0, 1)->map($headCallback)->merge($this->slice(1)->map($tailCallback));
+        });
     }
 
     /**
