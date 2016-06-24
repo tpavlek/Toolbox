@@ -4,8 +4,9 @@ namespace Depotwarehouse\Toolbox\Tests\Collections;
 
 use Depotwarehouse\Toolbox\FrameworkIntegration\Laravel\ToolboxServiceProvider;
 use Illuminate\Support\Collection;
+use PHPUnit\Framework\TestCase;
 
-class CombinationsTest extends \PHPUnit_Framework_TestCase
+class CombinationsTest extends TestCase
 {
 
     /**
